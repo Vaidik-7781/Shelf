@@ -239,7 +239,7 @@ The model `all-MiniLM-L6-v2` learned from billions of text examples that concept
 
 ## 👨‍💻 Developer
 
-**Vaidik** — [@Vaidik-7781](https://github.com/Vaidik-7781)
+**Vaidik Gupta** — [@Vaidik-7781](https://github.com/Vaidik-7781)
 
 ---
 
