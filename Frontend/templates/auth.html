@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Shelf — Join the Archive</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,600;0,700;1,400;1,700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "surface-container-highest": "#e7e2da",
+            "surface-container": "#f2ede5",
+            "secondary": "#755b00",
+            "on-error-container": "#93000a",
+            "tertiary": "#1f1500",
+            "primary": "#041534",
+            "on-secondary-container": "#785d00",
+            "on-primary-fixed-variant": "#384668",
+            "surface-variant": "#e7e2da",
+            "surface-tint": "#4f5e81",
+            "on-tertiary-container": "#a49064",
+            "on-primary-container": "#8392b7",
+            "error-container": "#ffdad6",
+            "on-primary-fixed": "#0a1a3a",
+            "on-primary": "#ffffff",
+            "on-tertiary-fixed-variant": "#544520",
+            "surface": "#fef9f1",
+            "tertiary-fixed-dim": "#dbc494",
+            "tertiary-fixed": "#f8e0ae",
+            "surface-container-low": "#f8f3eb",
+            "on-surface-variant": "#45464e",
+            "inverse-surface": "#32302b",
+            "on-tertiary-fixed": "#251a00",
+            "background": "#fef9f1",
+            "primary-fixed": "#d9e2ff",
+            "on-tertiary": "#ffffff",
+            "on-secondary-fixed-variant": "#584400",
+            "error": "#ba1a1a",
+            "surface-container-lowest": "#ffffff",
+            "tertiary-container": "#362906",
+            "secondary-container": "#fed977",
+            "inverse-primary": "#b7c6ee",
+            "on-error": "#ffffff",
+            "on-surface": "#1d1c17",
+            "on-secondary": "#ffffff",
+            "surface-bright": "#fef9f1",
+            "secondary-fixed": "#ffe08f",
+            "primary-container": "#1b2a4a",
+            "outline": "#75777f",
+            "on-background": "#1d1c17",
+            "primary-fixed-dim": "#b7c6ee",
+            "inverse-on-surface": "#f5f0e8",
+            "surface-dim": "#ded9d2",
+            "outline-variant": "#c5c6cf",
+            "secondary-fixed-dim": "#e6c364",
+            "on-secondary-fixed": "#241a00",
+            "surface-container-high": "#ece8e0"
+          },
+          fontFamily: {
+            "headline": ["Newsreader", "serif"],
+            "body": ["Manrope", "sans-serif"],
+            "label": ["Manrope", "sans-serif"]
+          },
+          borderRadius: { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }
+        }
+      }
+    }
+  </script>
+  <style>
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    body { font-family: 'Manrope', sans-serif; }
+    h1, h2, .font-serif { font-family: 'Newsreader', serif; }
+
+    /* Tab slide indicator */
+    #tab-indicator { transition: transform 0.25s cubic-bezier(0.4,0,0.2,1), width 0.25s; }
+
+    /* Form switch */
+    .form-panel { transition: opacity 0.2s ease, transform 0.2s ease; }
+    .form-panel.hidden-panel { opacity: 0; transform: translateX(12px); pointer-events: none; position: absolute; }
+
+    /* Genre chip active */
+    .genre-chip.active {
+      background-color: #362906;
+      color: #f8e0ae;
+      border-color: #544520;
+    }
+
+    /* Error field shake */
+    @keyframes shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-4px)} 40%,80%{transform:translateX(4px)} }
+    .field-error { animation: shake 0.4s ease; border-color: #ba1a1a !important; }
+    .field-error:focus { box-shadow: 0 0 0 1px #ba1a1a; }
+
+    /* Toast */
+    #toast { transition: all 0.35s cubic-bezier(0.34,1.56,0.64,1); }
+    #toast.show { transform: translateY(0) !important; opacity: 1 !important; }
+
+    /* Spinner */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spin { animation: spin 0.7s linear infinite; display: inline-block; }
+
+    /* Password toggle */
+    .pw-toggle { cursor: pointer; user-select: none; }
+
+    /* Input field */
+    .shelf-input {
+      width: 100%;
+      background: #f8f3eb;
+      border: 1px solid rgba(197,198,207,0.3);
+      border-radius: 0.5rem;
+      padding: 0.75rem 1rem;
+      font-family: 'Manrope', sans-serif;
+      color: #1d1c17;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .shelf-input:focus { border-color: rgba(117,91,0,0.5); box-shadow: 0 0 0 1px rgba(117,91,0,0.3); }
+    .shelf-input::placeholder { color: rgba(69,70,78,0.35); }
+  </style>
+</head>
+
+<body class="bg-surface text-on-surface font-body min-h-screen flex flex-col">
+
+<!-- ════════════════════════════════════════════
+     MAIN
+═════════════════════════════════════════════ -->
+<main class="flex-grow flex items-center justify-center p-6 md:p-12 relative overflow-hidden">
+
+  <!-- Blurred bg -->
+  <div class="absolute inset-0 z-0 opacity-20">
+    <div class="w-full h-full bg-gradient-to-br from-primary-container via-surface-container to-secondary-container blur-3xl scale-110"></div>
+  </div>
+
+  <!-- Back to home link -->
+  <a href="/"
+     class="absolute top-6 left-6 z-20 flex items-center gap-1 text-primary/60 font-label text-xs uppercase tracking-widest hover:text-primary transition-colors">
+    <span class="material-symbols-outlined text-sm">arrow_back</span>
+    Back to Shelf
+  </a>
+
+  <!-- ── Auth Card ── -->
+  <div class="relative z-10 w-full max-w-xl bg-surface-container-lowest rounded-xl shadow-2xl shadow-on-surface/5 border border-outline-variant/15 overflow-hidden">
+
+    <!-- Branding -->
+    <div class="pt-12 pb-6 text-center">
+      <h1 class="font-headline italic font-bold text-4xl text-primary tracking-tight">Shelf</h1>
+      <p class="font-label text-xs tracking-widest uppercase text-on-surface-variant mt-2">
+        Digital Archive &amp; Curated Sanctuary
+      </p>
+    </div>
+
+    <!-- Tabs -->
+    <div class="flex px-12 gap-8 border-b border-surface-container relative">
+      <button id="tab-login"
+              onclick="switchTab('login')"
+              class="pb-4 font-headline text-lg text-primary font-bold relative transition-colors">
+        Login
+      </button>
+      <button id="tab-register"
+              onclick="switchTab('register')"
+              class="pb-4 font-headline text-lg text-on-surface-variant/50 hover:text-on-surface transition-colors relative">
+        Register
+      </button>
+      <!-- sliding underline -->
+      <span id="tab-indicator"
+            class="absolute bottom-0 left-12 h-0.5 bg-secondary"
+            style="width:48px"></span>
+    </div>
+
+    <!-- ── LOGIN FORM ── -->
+    <div id="login-panel" class="form-panel p-12 space-y-6 relative">
+
+      <div class="space-y-2">
+        <label class="font-label text-xs tracking-widest uppercase text-on-surface-variant ml-1">Email address</label>
+        <input id="login-email" class="shelf-input" placeholder="aryan@example.com" type="email" autocomplete="email"/>
+        <p id="login-email-err" class="hidden text-xs text-error font-label ml-1"></p>
+      </div>
+
+      <div class="space-y-2">
+        <label class="font-label text-xs tracking-widest uppercase text-on-surface-variant ml-1">Password</label>
+        <div class="relative">
+          <input id="login-password" class="shelf-input pr-12" placeholder="••••••••" type="password" autocomplete="current-password"/>
+          <span id="login-pw-toggle"
+                class="pw-toggle material-symbols-outlined absolute right-3 top-3 text-on-surface-variant/40 hover:text-on-surface-variant text-sm"
+                onclick="togglePw('login-password', this)">
+            visibility_off
+          </span>
+        </div>
+        <p id="login-pw-err" class="hidden text-xs text-error font-label ml-1"></p>
+      </div>
+
+      <div class="flex items-center justify-between">
+        <label class="flex items-center gap-2 cursor-pointer">
+          <input id="remember-me" type="checkbox" class="accent-secondary rounded"/>
+          <span class="text-xs font-label text-on-surface-variant">Remember me</span>
+        </label>
+      </div>
+
+      <!-- Error banner -->
+      <div id="login-error-banner"
+           class="hidden bg-error-container text-on-error-container text-sm font-label px-4 py-3 rounded-lg flex items-center gap-2">
+        <span class="material-symbols-outlined text-sm">error</span>
+        <span id="login-error-text"></span>
+      </div>
+
+      <div class="pt-2">
+        <button id="login-btn"
+                onclick="doLogin()"
+                class="w-full bg-gradient-to-r from-primary to-primary-container text-on-primary font-label text-sm tracking-widest uppercase py-4 rounded-lg shadow-lg shadow-primary/20 hover:shadow-xl hover:-translate-y-0.5 active:scale-95 transition-all flex items-center justify-center gap-2">
+          <span id="login-btn-text">Sign In to Your Shelf</span>
+        </button>
+      </div>
+
+      <p class="text-center text-xs text-on-surface-variant font-label">
+        New here?
+        <button onclick="switchTab('register')" class="text-primary font-bold hover:underline underline-offset-2 ml-1">
+          Create an account →
+        </button>
+      </p>
+
+      <!-- Demo creds hint -->
+      <div class="bg-surface-container rounded-lg p-4 text-xs font-label text-on-surface-variant space-y-1">
+        <p class="font-bold text-primary uppercase tracking-widest text-[10px] mb-2">Demo Credentials</p>
+        <p>👤 User &nbsp;— aryan@example.com / <span class="font-bold">password123</span></p>
+        <p>🔐 Admin — admin@shelf.com / <span class="font-bold">admin123</span></p>
+      </div>
+    </div>
+
+    <!-- ── REGISTER FORM ── -->
+    <div id="register-panel" class="form-panel hidden-panel p-12 space-y-5 relative">
+
+      <!-- Full Name -->
+      <div class="space-y-2">
+        <label class="font-label text-xs tracking-widest uppercase text-on-surface-variant ml-1">Full Name</label>
+        <input id="reg-name" class="shelf-input" placeholder="Aryan Sharma" type="text" autocomplete="name"/>
+        <p id="reg-name-err" class="hidden text-xs text-error font-label ml-1"></p>
+      </div>
+
+      <!-- Email -->
+      <div class="space-y-2">
+        <label class="font-label text-xs tracking-widest uppercase text-on-surface-variant ml-1">Email address</label>
+        <input id="reg-email" class="shelf-input" placeholder="aryan@example.com" type="email" autocomplete="email"/>
+        <p id="reg-email-err" class="hidden text-xs text-error font-label ml-1"></p>
+      </div>
+
+      <!-- Password row -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="space-y-2">
+          <label class="font-label text-xs tracking-widest uppercase text-on-surface-variant ml-1">Password</label>
+          <div class="relative">
+            <input id="reg-password" class="shelf-input pr-12" placeholder="••••••••" type="password" autocomplete="new-password"/>
+            <span class="pw-toggle material-symbols-outlined absolute right-3 top-3 text-on-surface-variant/40 hover:text-on-surface-variant text-sm"
+                  onclick="togglePw('reg-password', this)">visibility_off</span>
+          </div>
+          <p id="reg-pw-err" class="hidden text-xs text-error font-label ml-1"></p>
+        </div>
+        <div class="space-y-2">
+          <label class="font-label text-xs tracking-widest uppercase text-on-surface-variant ml-1">Confirm Password</label>
+          <div class="relative">
+            <input id="reg-confirm" class="shelf-input pr-12" placeholder="••••••••" type="password" autocomplete="new-password"/>
+            <span class="pw-toggle material-symbols-outlined absolute right-3 top-3 text-on-surface-variant/40 hover:text-on-surface-variant text-sm"
+                  onclick="togglePw('reg-confirm', this)">visibility_off</span>
+          </div>
+          <p id="reg-confirm-err" class="hidden text-xs text-error font-label ml-1"></p>
+        </div>
+      </div>
+
+      <!-- Password strength bar -->
+      <div class="space-y-1">
+        <div class="h-1 bg-surface-container-high rounded-full overflow-hidden">
+          <div id="pw-strength-bar" class="h-full rounded-full transition-all duration-300" style="width:0%"></div>
+        </div>
+        <p id="pw-strength-label" class="text-[10px] font-label text-on-surface-variant/60 ml-1"></p>
+      </div>
+
+      <!-- Favorite Genres -->
+      <div class="space-y-3">
+        <label class="font-label text-xs tracking-widest uppercase text-on-surface-variant ml-1">Favorite Genres</label>
+        <div class="flex flex-wrap gap-2" id="genre-chips">
+          <!-- rendered by JS -->
+        </div>
+      </div>
+
+      <!-- Preferred Language -->
+      <div class="space-y-2">
+        <label class="font-label text-xs tracking-widest uppercase text-on-surface-variant ml-1">Preferred Language</label>
+        <div class="relative">
+          <select id="reg-language"
+                  class="shelf-input pr-10 appearance-none cursor-pointer">
+            <option value="English">English</option>
+            <option value="Hindi">Hindi</option>
+            <option value="Tamil">Tamil</option>
+            <option value="Telugu">Telugu</option>
+            <option value="Kannada">Kannada</option>
+            <option value="Malayalam">Malayalam</option>
+            <option value="Bengali">Bengali</option>
+            <option value="Marathi">Marathi</option>
+            <option value="Gujarati">Gujarati</option>
+            <option value="Punjabi">Punjabi</option>
+          </select>
+          <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant">
+            <span class="material-symbols-outlined" style="font-size:18px">expand_more</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Error banner -->
+      <div id="reg-error-banner"
+           class="hidden bg-error-container text-on-error-container text-sm font-label px-4 py-3 rounded-lg flex items-center gap-2">
+        <span class="material-symbols-outlined text-sm">error</span>
+        <span id="reg-error-text"></span>
+      </div>
+
+      <div class="pt-2">
+        <button id="reg-btn"
+                onclick="doRegister()"
+                class="w-full bg-gradient-to-r from-primary to-primary-container text-on-primary font-label text-sm tracking-widest uppercase py-4 rounded-lg shadow-lg shadow-primary/20 hover:shadow-xl hover:-translate-y-0.5 active:scale-95 transition-all flex items-center justify-center gap-2">
+          <span id="reg-btn-text">Create Account</span>
+        </button>
+      </div>
+
+      <p class="text-center text-xs text-on-surface-variant font-label">
+        Already a member?
+        <button onclick="switchTab('login')" class="text-primary font-bold hover:underline underline-offset-2 ml-1">
+          Sign in →
+        </button>
+      </p>
+    </div>
+
+    <!-- Bottom note -->
+    <div class="bg-surface-container p-6 text-center">
+      <p class="text-xs text-on-surface-variant/70 font-body">
+        By joining, you agree to our
+        <a class="underline hover:text-secondary transition-colors" href="#">Curatorial Terms</a>
+        and
+        <a class="underline hover:text-secondary transition-colors" href="#">AI Ethics Policy</a>.
+      </p>
+    </div>
+
+  </div><!-- /card -->
+</main>
+
+<!-- ════════════════════════════════════════════
+     FOOTER
+═════════════════════════════════════════════ -->
+<footer class="w-full py-12 bg-[#f2ede5]">
+  <div class="flex flex-col md:flex-row justify-between items-center px-8 max-w-screen-2xl mx-auto gap-4">
+    <div class="text-lg font-headline font-semibold text-[#041534]">Shelf</div>
+    <div class="flex gap-8">
+      <a class="font-label text-xs tracking-widest uppercase text-[#1d1c17]/50 hover:underline underline-offset-4" href="#">Privacy Policy</a>
+      <a class="font-label text-xs tracking-widest uppercase text-[#1d1c17]/50 hover:underline underline-offset-4" href="#">Terms of Service</a>
+      <a class="font-label text-xs tracking-widest uppercase text-[#1d1c17]/50 hover:underline underline-offset-4" href="#">AI Ethics</a>
+      <a class="font-label text-xs tracking-widest uppercase text-[#1d1c17]/50 hover:underline underline-offset-4" href="#">Contact</a>
+    </div>
+    <p class="font-label text-xs tracking-widest uppercase text-[#1d1c17]/50">
+      © 2025 Shelf Digital Archive. All rights reserved.
+    </p>
+  </div>
+</footer>
+
+<!-- Toast -->
+<div id="toast"
+     class="fixed bottom-6 right-6 z-50 bg-primary text-on-primary px-6 py-4 rounded-xl shadow-2xl font-label font-bold text-sm flex items-center gap-3 opacity-0"
+     style="transform: translateY(2rem);">
+  <span id="toast-icon" class="material-symbols-outlined text-base"></span>
+  <span id="toast-msg"></span>
+</div>
+
+<!-- ════════════════════════════════════════════
+     JAVASCRIPT
+═════════════════════════════════════════════ -->
+<script>
+// ──────────────────────────────────────────────
+//  Constants
+// ──────────────────────────────────────────────
+const GENRES = [
+  'Fiction', 'Non-Fiction', 'Mystery & Thriller', 'Fantasy & Mythology',
+  'Science Fiction', 'Romance', 'Self-Help', 'History & Science',
+  'Indian Literature', 'Biography', 'Philosophy', 'Technology'
+];
+
+let selectedGenres = [];
+let activeTab      = 'login';
+
+// ──────────────────────────────────────────────
+//  Redirect if already logged in
+// ──────────────────────────────────────────────
+(function () {
+  const token = localStorage.getItem('shelf_token');
+  if (token) {
+    const redirect = new URLSearchParams(window.location.search).get('redirect') || '/';
+    window.location.href = redirect;
+  }
+})();
+
+// ──────────────────────────────────────────────
+//  URL param: ?tab=register
+// ──────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  const tabParam = new URLSearchParams(window.location.search).get('tab');
+  if (tabParam === 'register') switchTab('register');
+
+  buildGenreChips();
+  watchPasswordStrength();
+});
+
+// ──────────────────────────────────────────────
+//  Toast
+// ──────────────────────────────────────────────
+function showToast(msg, type = 'success') {
+  const toast = document.getElementById('toast');
+  document.getElementById('toast-icon').textContent = type === 'success' ? 'check_circle' : 'error';
+  document.getElementById('toast-msg').textContent  = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3200);
+}
+
+// ──────────────────────────────────────────────
+//  Tab Switch
+// ──────────────────────────────────────────────
+function switchTab(tab) {
+  activeTab = tab;
+
+  const loginPanel    = document.getElementById('login-panel');
+  const registerPanel = document.getElementById('register-panel');
+  const tabLogin      = document.getElementById('tab-login');
+  const tabReg        = document.getElementById('tab-register');
+  const indicator     = document.getElementById('tab-indicator');
+
+  if (tab === 'login') {
+    loginPanel.classList.remove('hidden-panel');
+    registerPanel.classList.add('hidden-panel');
+
+    tabLogin.classList.add('text-primary', 'font-bold');
+    tabLogin.classList.remove('text-on-surface-variant/50');
+    tabReg.classList.remove('text-primary', 'font-bold');
+    tabReg.classList.add('text-on-surface-variant/50');
+
+    indicator.style.width = '48px';
+    indicator.style.transform = 'translateX(0)';
+  } else {
+    registerPanel.classList.remove('hidden-panel');
+    loginPanel.classList.add('hidden-panel');
+
+    tabReg.classList.add('text-primary', 'font-bold');
+    tabReg.classList.remove('text-on-surface-variant/50');
+    tabLogin.classList.remove('text-primary', 'font-bold');
+    tabLogin.classList.add('text-on-surface-variant/50');
+
+    // Move indicator to "Register" tab position
+    const loginW = document.getElementById('tab-login').offsetWidth;
+    indicator.style.width  = document.getElementById('tab-register').offsetWidth + 'px';
+    indicator.style.transform = `translateX(${loginW + 32}px)`;  // 32 = gap-8
+  }
+
+  clearAllErrors();
+}
+
+// ──────────────────────────────────────────────
+//  Password visibility toggle
+// ──────────────────────────────────────────────
+function togglePw(inputId, iconEl) {
+  const input = document.getElementById(inputId);
+  if (input.type === 'password') {
+    input.type = 'text';
+    iconEl.textContent = 'visibility';
+  } else {
+    input.type = 'password';
+    iconEl.textContent = 'visibility_off';
+  }
+}
+
+// ──────────────────────────────────────────────
+//  Password strength meter
+// ──────────────────────────────────────────────
+function watchPasswordStrength() {
+  document.getElementById('reg-password').addEventListener('input', (e) => {
+    const val   = e.target.value;
+    const bar   = document.getElementById('pw-strength-bar');
+    const label = document.getElementById('pw-strength-label');
+
+    let score = 0;
+    if (val.length >= 6)  score++;
+    if (val.length >= 10) score++;
+    if (/[A-Z]/.test(val)) score++;
+    if (/[0-9]/.test(val)) score++;
+    if (/[^A-Za-z0-9]/.test(val)) score++;
+
+    const levels = [
+      { pct: '0%',   color: 'transparent', text: '' },
+      { pct: '20%',  color: '#ba1a1a',     text: 'Very weak' },
+      { pct: '40%',  color: '#e65c00',     text: 'Weak' },
+      { pct: '65%',  color: '#e6c364',     text: 'Fair' },
+      { pct: '85%',  color: '#4caf50',     text: 'Strong' },
+      { pct: '100%', color: '#388e3c',     text: 'Very strong' },
+    ];
+
+    const level = val.length === 0 ? levels[0] : levels[Math.min(score, 5)];
+    bar.style.width           = level.pct;
+    bar.style.backgroundColor = level.color;
+    label.textContent         = level.text;
+  });
+}
+
+// ──────────────────────────────────────────────
+//  Genre chips
+// ──────────────────────────────────────────────
+function buildGenreChips() {
+  const container = document.getElementById('genre-chips');
+  container.innerHTML = GENRES.map(g => `
+    <button type="button"
+            data-genre="${g}"
+            class="genre-chip px-4 py-1.5 rounded-full bg-surface-container-high text-on-surface-variant text-sm font-label font-medium border border-outline-variant/10 hover:bg-secondary-container hover:text-on-secondary-container transition-colors"
+            onclick="toggleGenre(this, '${g}')">
+      ${g}
+    </button>
+  `).join('');
+}
+
+function toggleGenre(btn, genre) {
+  if (btn.classList.contains('active')) {
+    btn.classList.remove('active');
+    selectedGenres = selectedGenres.filter(g => g !== genre);
+  } else {
+    btn.classList.add('active');
+    selectedGenres.push(genre);
+  }
+}
+
+// ──────────────────────────────────────────────
+//  Validation helpers
+// ──────────────────────────────────────────────
+function showFieldErr(id, msg) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.remove('hidden');
+  // shake the parent input
+  const input = el.previousElementSibling?.tagName === 'INPUT'
+    ? el.previousElementSibling
+    : el.previousElementSibling?.querySelector('input');
+  if (input) {
+    input.classList.add('field-error');
+    setTimeout(() => input.classList.remove('field-error'), 500);
+  }
+}
+
+function clearFieldErr(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.add('hidden');
+}
+
+function clearAllErrors() {
+  ['login-email-err','login-pw-err',
+   'reg-name-err','reg-email-err','reg-pw-err','reg-confirm-err'].forEach(clearFieldErr);
+  document.getElementById('login-error-banner').classList.add('hidden');
+  document.getElementById('reg-error-banner').classList.add('hidden');
+}
+
+function showBanner(id, textId, msg) {
+  document.getElementById(textId).textContent = msg;
+  document.getElementById(id).classList.remove('hidden');
+}
+
+function setButtonLoading(btnId, textId, loading, label) {
+  const btn  = document.getElementById(btnId);
+  const text = document.getElementById(textId);
+  btn.disabled = loading;
+  if (loading) {
+    text.innerHTML = `<span class="material-symbols-outlined text-sm spin">progress_activity</span> Please wait…`;
+  } else {
+    text.textContent = label;
+  }
+}
+
+// ──────────────────────────────────────────────
+//  LOGIN
+// ──────────────────────────────────────────────
+async function doLogin() {
+  clearAllErrors();
+
+  const email    = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+
+  let valid = true;
+  if (!email || !email.includes('@')) {
+    showFieldErr('login-email-err', 'Please enter a valid email address.');
+    valid = false;
+  }
+  if (!password || password.length < 4) {
+    showFieldErr('login-pw-err', 'Please enter your password.');
+    valid = false;
+  }
+  if (!valid) return;
+
+  setButtonLoading('login-btn', 'login-btn-text', true, 'Sign In to Your Shelf');
+
+  try {
+    const res  = await fetch('/api/auth/login', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ email, password })
+    });
+    const data = await res.json();
+
+    if (data.status === 'ok') {
+      localStorage.setItem('shelf_token', data.data.token);
+
+      // Store basic user info
+      localStorage.setItem('shelf_user', JSON.stringify(data.data.user));
+
+      showToast(`Welcome back, ${data.data.user.name.split(' ')[0]}! 📚`);
+
+      const redirect = new URLSearchParams(window.location.search).get('redirect');
+
+      setTimeout(() => {
+        if (data.data.user.is_admin && !redirect) {
+          window.location.href = '/admin';
+        } else {
+          window.location.href = redirect || '/';
+        }
+      }, 900);
+    } else {
+      showBanner('login-error-banner', 'login-error-text', data.message || 'Invalid credentials. Please try again.');
+      setButtonLoading('login-btn', 'login-btn-text', false, 'Sign In to Your Shelf');
+    }
+  } catch (e) {
+    showBanner('login-error-banner', 'login-error-text', 'Server error. Please try again later.');
+    setButtonLoading('login-btn', 'login-btn-text', false, 'Sign In to Your Shelf');
+  }
+}
+
+// ──────────────────────────────────────────────
+//  REGISTER
+// ──────────────────────────────────────────────
+async function doRegister() {
+  clearAllErrors();
+
+  const name     = document.getElementById('reg-name').value.trim();
+  const email    = document.getElementById('reg-email').value.trim();
+  const password = document.getElementById('reg-password').value;
+  const confirm  = document.getElementById('reg-confirm').value;
+  const language = document.getElementById('reg-language').value;
+
+  let valid = true;
+
+  if (!name || name.length < 2) {
+    showFieldErr('reg-name-err', 'Please enter your full name.');
+    valid = false;
+  }
+  if (!email || !email.includes('@')) {
+    showFieldErr('reg-email-err', 'Please enter a valid email address.');
+    valid = false;
+  }
+  if (!password || password.length < 6) {
+    showFieldErr('reg-pw-err', 'Password must be at least 6 characters.');
+    valid = false;
+  }
+  if (password !== confirm) {
+    showFieldErr('reg-confirm-err', 'Passwords do not match.');
+    valid = false;
+  }
+  if (!valid) return;
+
+  setButtonLoading('reg-btn', 'reg-btn-text', true, 'Create Account');
+
+  const preferences = {
+    genres:   selectedGenres,
+    language: language
+  };
+
+  try {
+    const res  = await fetch('/api/auth/register', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ name, email, password, preferences })
+    });
+    const data = await res.json();
+
+    if (data.status === 'ok') {
+      localStorage.setItem('shelf_token', data.data.token);
+      localStorage.setItem('shelf_user', JSON.stringify(data.data.user));
+
+      showToast(`Account created! Welcome to Shelf, ${name.split(' ')[0]}! 📚`);
+
+      setTimeout(() => {
+        window.location.href = new URLSearchParams(window.location.search).get('redirect') || '/';
+      }, 1000);
+    } else {
+      const msg = data.message || 'Registration failed. Please try again.';
+      showBanner('reg-error-banner', 'reg-error-text', msg);
+      if (msg.toLowerCase().includes('email')) {
+        showFieldErr('reg-email-err', 'This email is already registered.');
+      }
+      setButtonLoading('reg-btn', 'reg-btn-text', false, 'Create Account');
+    }
+  } catch (e) {
+    showBanner('reg-error-banner', 'reg-error-text', 'Server error. Please try again later.');
+    setButtonLoading('reg-btn', 'reg-btn-text', false, 'Create Account');
+  }
+}
+
+// ──────────────────────────────────────────────
+//  Enter key support
+// ──────────────────────────────────────────────
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter') return;
+  if (activeTab === 'login')    doLogin();
+  else                          doRegister();
+});
+</script>
+
+</body>
+</html>

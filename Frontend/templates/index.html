@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Shelf | The Digital Bibliophile Sanctuary</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&family=Manrope:wght@200..800&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "on-tertiary-fixed-variant": "#544520",
+            "on-surface-variant": "#45464e",
+            "inverse-primary": "#b7c6ee",
+            "tertiary-fixed-dim": "#dbc494",
+            "tertiary-container": "#362906",
+            "surface-bright": "#fef9f1",
+            "on-primary-fixed-variant": "#384668",
+            "on-primary-container": "#8392b7",
+            "on-error": "#ffffff",
+            "on-tertiary": "#ffffff",
+            "surface-container-lowest": "#ffffff",
+            "background": "#fef9f1",
+            "tertiary": "#1f1500",
+            "error-container": "#ffdad6",
+            "surface-container-low": "#f8f3eb",
+            "on-surface": "#1d1c17",
+            "secondary": "#755b00",
+            "secondary-fixed": "#ffe08f",
+            "primary-container": "#1b2a4a",
+            "primary": "#041534",
+            "outline": "#75777f",
+            "on-secondary-fixed-variant": "#584400",
+            "on-secondary-fixed": "#241a00",
+            "on-primary": "#ffffff",
+            "outline-variant": "#c5c6cf",
+            "surface-container-high": "#ece8e0",
+            "on-tertiary-fixed": "#251a00",
+            "on-tertiary-fixed-dim": "#dbc494",
+            "on-primary-fixed": "#0a1a3a",
+            "tertiary-fixed": "#f8e0ae",
+            "on-background": "#1d1c17",
+            "surface-dim": "#ded9d2",
+            "error": "#ba1a1a",
+            "primary-fixed": "#d9e2ff",
+            "surface-container-highest": "#e7e2da",
+            "surface": "#fef9f1",
+            "secondary-container": "#fed977",
+            "on-error-container": "#93000a",
+            "surface-variant": "#e7e2da",
+            "surface-container": "#f2ede5",
+            "secondary-fixed-dim": "#e6c364",
+            "on-secondary": "#ffffff",
+            "primary-fixed-dim": "#b7c6ee",
+            "surface-tint": "#4f5e81",
+            "inverse-on-surface": "#f5f0e8",
+            "on-secondary-container": "#785d00",
+            "inverse-surface": "#32302b"
+          },
+          fontFamily: {
+            "headline": ["Newsreader", "serif"],
+            "body": ["Manrope", "sans-serif"],
+            "label": ["Manrope", "sans-serif"]
+          },
+          borderRadius: { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Manrope', sans-serif; }
+    h1, h2, h3, h4 { font-family: 'Newsreader', serif; }
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    .hide-scrollbar::-webkit-scrollbar { display: none; }
+    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* Book card skeleton loader */
+    .skeleton { background: linear-gradient(90deg, #f2ede5 25%, #ece8e0 50%, #f2ede5 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+    /* Toast notification */
+    #toast { transition: all 0.35s cubic-bezier(0.34,1.56,0.64,1); }
+    #toast.show { transform: translateY(0) !important; opacity: 1 !important; }
+
+    /* Search results fade */
+    #books-grid { transition: opacity 0.25s ease; }
+    #books-grid.loading { opacity: 0.4; pointer-events: none; }
+
+    /* Mood pill active state */
+    .mood-pill.active { background-color: #fed977; color: #785d00; border-color: #755b00; font-weight: 700; }
+
+    /* Cart badge pulse */
+    @keyframes badgePop { 0%,100%{transform:scale(1)} 50%{transform:scale(1.4)} }
+    .badge-pop { animation: badgePop 0.3s ease; }
+
+    /* Cover image fallback gradient */
+    .book-cover-fallback {
+      background: linear-gradient(135deg, #1b2a4a 0%, #041534 60%, #4f5e81 100%);
+    }
+
+    /* Search result score badge */
+    .score-badge { background: rgba(4,21,52,0.08); }
+  </style>
+</head>
+
+<body class="bg-background text-on-background selection:bg-secondary-container selection:text-on-secondary-container">
+
+<!-- ═══════════════════════════════════════════════════
+     TOP NAVIGATION
+════════════════════════════════════════════════════ -->
+<nav class="bg-[#fef9f1] sticky top-0 z-50 border-b border-outline-variant/10">
+  <div class="flex justify-between items-center w-full px-8 py-4 max-w-7xl mx-auto">
+
+    <!-- Logo -->
+    <a href="/" class="text-2xl font-serif font-bold text-[#041534] tracking-tight">Shelf</a>
+
+    <!-- Nav Links -->
+    <div class="hidden md:flex items-center space-x-8">
+      <a class="text-[#041534] border-b-2 border-[#1B2A4A] pb-1 font-bold" href="/">Home</a>
+      <a class="text-[#1d1c17]/70 font-medium hover:text-[#1B2A4A] transition-colors duration-300" href="/?browse=all">Browse</a>
+      <a class="text-[#1d1c17]/70 font-medium hover:text-[#1B2A4A] transition-colors duration-300" href="/cart" id="nav-wishlist">Wishlist</a>
+    </div>
+
+    <!-- Right Controls -->
+    <div class="flex items-center space-x-5">
+      <!-- Cart Icon -->
+      <a href="/cart" class="text-[#041534] flex items-center relative group">
+        <span class="material-symbols-outlined group-hover:scale-110 transition-transform">shopping_cart</span>
+        <span id="cart-badge"
+              class="absolute -top-2 -right-2 bg-secondary text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center hidden">
+          0
+        </span>
+      </a>
+
+      <!-- Auth Button — changes after login -->
+      <div id="auth-area">
+        <a href="/auth"
+           class="bg-primary text-on-primary px-6 py-2 rounded-md font-label text-sm font-bold hover:bg-primary-container transition-colors active:opacity-80">
+          Login
+        </a>
+      </div>
+    </div>
+
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════
+     HERO + SEARCH
+════════════════════════════════════════════════════ -->
+<main>
+<section class="relative pt-24 pb-32 px-8 overflow-hidden">
+  <div class="max-w-4xl mx-auto text-center relative z-10">
+
+    <h1 class="text-6xl md:text-7xl font-headline font-bold text-primary leading-tight tracking-tight mb-12">
+      Find your next book by feeling,
+      <span class="italic font-normal">not keywords</span>
+    </h1>
+
+    <!-- Search Bar -->
+    <div class="relative group max-w-3xl mx-auto mb-6">
+      <div class="absolute -inset-1 bg-gradient-to-r from-primary/10 to-secondary/10 rounded-xl blur opacity-25 group-focus-within:opacity-100 transition duration-1000"></div>
+      <div class="relative flex items-center bg-surface-container-lowest border border-outline-variant/15 rounded-xl shadow-sm overflow-hidden p-2">
+        <span class="material-symbols-outlined px-4 text-outline" id="search-icon">auto_awesome</span>
+        <input id="search-input"
+               class="flex-grow bg-transparent border-none focus:ring-0 text-lg font-body py-4 placeholder:text-outline/60"
+               placeholder="Describe what you feel like reading..."
+               type="text"
+               autocomplete="off"/>
+        <button id="search-btn"
+                class="bg-gradient-to-br from-primary to-primary-container text-on-primary px-8 py-4 rounded-lg font-label font-bold tracking-wide transition-all hover:shadow-lg active:scale-95">
+          Search
+        </button>
+      </div>
+    </div>
+
+    <!-- Search Mode Toggle -->
+    <div class="flex items-center justify-center space-x-4 mb-20">
+      <span id="label-keyword" class="text-xs font-label uppercase tracking-widest text-on-surface/60">Keyword Search</span>
+      <button id="mode-toggle"
+              aria-checked="true"
+              role="switch"
+              class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 bg-primary-container focus:outline-none">
+        <span id="toggle-knob"
+              class="translate-x-5 pointer-events-none inline-block h-5 w-5 transform rounded-full bg-secondary-container shadow ring-0 transition duration-200 ease-in-out">
+        </span>
+      </button>
+      <span id="label-semantic" class="text-xs font-label uppercase tracking-widest font-bold text-primary">Semantic Search</span>
+    </div>
+
+    <!-- Search Result Info Bar (hidden by default) -->
+    <div id="search-info" class="hidden mb-8 text-sm text-on-surface/60 font-label">
+      <span id="search-info-text"></span>
+      <button id="clear-search" class="ml-3 text-primary font-bold hover:underline">Clear ✕</button>
+    </div>
+
+  </div>
+
+  <!-- Bg blobs -->
+  <div class="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-96 h-96 bg-secondary-container/10 rounded-full blur-3xl -z-10"></div>
+  <div class="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/4 w-[32rem] h-[32rem] bg-primary-container/5 rounded-full blur-3xl -z-10"></div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════
+     MOOD FILTERS
+════════════════════════════════════════════════════ -->
+<section class="pb-16 px-8 max-w-7xl mx-auto">
+  <div class="flex items-center justify-between mb-8 border-b border-outline-variant/10 pb-4">
+    <h3 class="text-sm font-label uppercase tracking-[0.2em] font-bold text-primary">Curated Moods</h3>
+    <button id="explore-all-btn" class="text-primary text-xs font-label font-bold flex items-center gap-2 hover:underline">
+      EXPLORE ALL
+      <span class="material-symbols-outlined text-sm">arrow_forward</span>
+    </button>
+  </div>
+
+  <div class="flex gap-4 overflow-x-auto hide-scrollbar py-2" id="mood-pills">
+    <!-- Pills generated by JS from MOODS constant -->
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════
+     CATALOG GRID
+════════════════════════════════════════════════════ -->
+<section class="bg-surface-container-low py-24 px-8">
+  <div class="max-w-7xl mx-auto">
+
+    <!-- Section Header -->
+    <div class="flex items-center justify-between mb-12">
+      <h2 id="catalog-heading" class="text-2xl font-headline font-bold text-primary">All Books</h2>
+      <span id="catalog-count" class="text-sm text-on-surface/50 font-label"></span>
+    </div>
+
+    <!-- Grid -->
+    <div id="books-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-16">
+      <!-- Skeleton loaders -->
+      <div class="flex flex-col" id="skeleton-1">
+        <div class="aspect-[2/3] skeleton rounded-sm mb-6"></div>
+        <div class="h-6 skeleton rounded mb-2 w-3/4"></div>
+        <div class="h-3 skeleton rounded mb-4 w-1/2"></div>
+        <div class="h-5 skeleton rounded w-1/3"></div>
+      </div>
+      <div class="flex flex-col" id="skeleton-2">
+        <div class="aspect-[2/3] skeleton rounded-sm mb-6"></div>
+        <div class="h-6 skeleton rounded mb-2 w-2/3"></div>
+        <div class="h-3 skeleton rounded mb-4 w-1/2"></div>
+        <div class="h-5 skeleton rounded w-1/3"></div>
+      </div>
+      <div class="flex flex-col" id="skeleton-3">
+        <div class="aspect-[2/3] skeleton rounded-sm mb-6"></div>
+        <div class="h-6 skeleton rounded mb-2 w-4/5"></div>
+        <div class="h-3 skeleton rounded mb-4 w-1/2"></div>
+        <div class="h-5 skeleton rounded w-1/4"></div>
+      </div>
+      <div class="flex flex-col" id="skeleton-4">
+        <div class="aspect-[2/3] skeleton rounded-sm mb-6"></div>
+        <div class="h-6 skeleton rounded mb-2 w-1/2"></div>
+        <div class="h-3 skeleton rounded mb-4 w-1/2"></div>
+        <div class="h-5 skeleton rounded w-1/3"></div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div id="empty-state" class="hidden text-center py-24">
+      <span class="material-symbols-outlined text-6xl text-outline/30 mb-4 block">menu_book</span>
+      <h3 class="text-2xl font-headline text-primary mb-2">No books found</h3>
+      <p class="text-on-surface/50 font-body mb-6">Try a different search or explore all books.</p>
+      <button id="empty-browse-btn"
+              class="bg-primary text-on-primary px-8 py-3 rounded-md font-label font-bold hover:bg-primary-container transition-colors">
+        Browse All Books
+      </button>
+    </div>
+
+    <!-- Load More -->
+    <div id="load-more-wrap" class="hidden text-center mt-16">
+      <button id="load-more-btn"
+              class="border-2 border-primary text-primary px-12 py-4 rounded-md font-label font-bold tracking-wide hover:bg-primary hover:text-on-primary transition-all">
+        Load More
+      </button>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════
+     NEWSLETTER SECTION
+════════════════════════════════════════════════════ -->
+<section class="py-32 px-8 max-w-5xl mx-auto text-center">
+  <div class="bg-primary p-16 rounded-xl relative overflow-hidden">
+    <div class="relative z-10">
+      <h2 class="text-4xl md:text-5xl text-white font-headline font-bold mb-6">
+        Curated for your curious mind
+      </h2>
+      <p class="text-on-primary-container max-w-xl mx-auto font-body mb-10 text-lg leading-relaxed">
+        Join our weekly literary digest. We send one deep-dive recommendation
+        tailored to the collective mood of the archive.
+      </p>
+      <div class="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
+        <input id="newsletter-email"
+               class="flex-grow bg-white/10 border border-white/20 rounded-lg px-6 py-4 text-white font-body focus:ring-secondary focus:border-secondary transition-all placeholder:text-white/40"
+               placeholder="Your email address"
+               type="email"/>
+        <button id="newsletter-btn"
+                class="bg-secondary-container text-on-secondary-container px-8 py-4 rounded-lg font-label font-extrabold whitespace-nowrap hover:bg-secondary-fixed transition-colors">
+          Join Now
+        </button>
+      </div>
+      <p id="newsletter-msg" class="hidden mt-4 text-secondary-container font-label text-sm font-bold"></p>
+    </div>
+    <div class="absolute -top-12 -right-12 w-64 h-64 bg-secondary/30 rounded-full blur-[80px]"></div>
+    <div class="absolute -bottom-12 -left-12 w-64 h-64 bg-primary-container/80 rounded-full blur-[80px]"></div>
+  </div>
+</section>
+</main>
+
+<!-- ═══════════════════════════════════════════════════
+     FOOTER
+════════════════════════════════════════════════════ -->
+<footer class="bg-[#f2ede5] w-full px-8 py-12 flex flex-col md:flex-row justify-between items-center gap-4">
+  <div class="font-serif italic text-lg text-[#041534]">Shelf.</div>
+  <div class="flex flex-wrap justify-center gap-8">
+    <a class="font-sans text-xs tracking-widest uppercase text-[#1d1c17]/60 hover:text-[#041534] transition-opacity" href="#">Privacy</a>
+    <a class="font-sans text-xs tracking-widest uppercase text-[#1d1c17]/60 hover:text-[#041534] transition-opacity" href="#">Terms</a>
+    <a class="font-sans text-xs tracking-widest uppercase text-[#1d1c17]/60 hover:text-[#041534] transition-opacity" href="#">Shipping</a>
+    <a class="font-sans text-xs tracking-widest uppercase text-[#1d1c17]/60 hover:text-[#041534] transition-opacity" href="#">Contact</a>
+  </div>
+  <div class="font-sans text-xs tracking-widest uppercase text-[#1d1c17]/60">
+    © 2025 Shelf. The Digital Bibliophile Sanctuary.
+  </div>
+</footer>
+
+<!-- ═══════════════════════════════════════════════════
+     TOAST NOTIFICATION
+════════════════════════════════════════════════════ -->
+<div id="toast"
+     class="fixed bottom-6 right-6 z-50 bg-primary text-on-primary px-6 py-4 rounded-xl shadow-2xl font-label font-bold text-sm flex items-center gap-3 opacity-0"
+     style="transform: translateY(2rem);">
+  <span id="toast-icon" class="material-symbols-outlined text-base"></span>
+  <span id="toast-msg"></span>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     JAVASCRIPT
+════════════════════════════════════════════════════ -->
+<script>
+// ──────────────────────────────────────────────────
+//  Constants
+// ──────────────────────────────────────────────────
+const API   = '';   // same origin — Flask serves both
+const TOKEN = () => localStorage.getItem('shelf_token');
+
+const MOODS = [
+  'Light & Funny',
+  'Dark & Thrilling',
+  'Thought-Provoking',
+  'Romantic',
+  'Mind-Bending',
+  'Emotional',
+  'Melancholic',
+  'Inspirational'
+];
+
+const FALLBACK_COVERS = [
+  'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=300&q=80',
+  'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=300&q=80',
+  'https://images.unsplash.com/photo-1495640388908-05fa85288e61?w=300&q=80',
+  'https://images.unsplash.com/photo-1516979187457-637abb4f9353?w=300&q=80',
+  'https://images.unsplash.com/photo-1519682337058-a94d519337bc?w=300&q=80',
+  'https://images.unsplash.com/photo-1432821596592-e2c18b78144f?w=300&q=80',
+];
+
+// ──────────────────────────────────────────────────
+//  State
+// ──────────────────────────────────────────────────
+let state = {
+  mode: 'semantic',       // 'semantic' | 'keyword'
+  activeMood: null,
+  query: '',
+  offset: 0,
+  limit: 12,
+  totalLoaded: 0,
+  cartCount: 0,
+  user: null,
+};
+
+// ──────────────────────────────────────────────────
+//  Utility
+// ──────────────────────────────────────────────────
+function formatINR(price) {
+  return '₹' + parseFloat(price).toLocaleString('en-IN', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2
+  });
+}
+
+function stars(rating) {
+  const r = parseFloat(rating) || 0;
+  let html = '';
+  for (let i = 1; i <= 5; i++) {
+    if (r >= i) {
+      html += `<span class="material-symbols-outlined text-xs text-secondary" style="font-variation-settings:'FILL' 1">star</span>`;
+    } else if (r >= i - 0.5) {
+      html += `<span class="material-symbols-outlined text-xs text-secondary" style="font-variation-settings:'FILL' 1">star_half</span>`;
+    } else {
+      html += `<span class="material-symbols-outlined text-xs text-outline/30">star</span>`;
+    }
+  }
+  return html;
+}
+
+async function apiFetch(path, opts = {}) {
+  const headers = { 'Content-Type': 'application/json', ...(opts.headers || {}) };
+  if (TOKEN()) headers['Authorization'] = `Bearer ${TOKEN()}`;
+  const res = await fetch(API + path, { ...opts, headers });
+  return res.json();
+}
+
+function showToast(msg, type = 'success') {
+  const toast = document.getElementById('toast');
+  const icon  = document.getElementById('toast-icon');
+  const text  = document.getElementById('toast-msg');
+  icon.textContent = type === 'success' ? 'check_circle' : 'error';
+  text.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+function coverSrc(url, idx = 0) {
+  if (url && url.startsWith('http')) return url;
+  return FALLBACK_COVERS[idx % FALLBACK_COVERS.length];
+}
+
+// ──────────────────────────────────────────────────
+//  Auth
+// ──────────────────────────────────────────────────
+async function loadUser() {
+  if (!TOKEN()) return;
+  const data = await apiFetch('/api/auth/me');
+  if (data.status === 'ok') {
+    state.user = data.data;
+    renderAuthArea();
+  }
+}
+
+function renderAuthArea() {
+  const area = document.getElementById('auth-area');
+  if (state.user) {
+    area.innerHTML = `
+      <div class="flex items-center gap-3">
+        <span class="text-sm font-label font-bold text-primary hidden md:block">
+          Hi, ${state.user.name.split(' ')[0]}
+        </span>
+        ${state.user.is_admin
+          ? `<a href="/admin" class="text-xs font-label font-bold text-secondary hover:underline">Admin</a>`
+          : ''}
+        <button onclick="logout()"
+          class="border border-primary/20 text-primary px-4 py-2 rounded-md font-label text-xs font-bold hover:bg-primary hover:text-on-primary transition-colors">
+          Logout
+        </button>
+      </div>`;
+  } else {
+    area.innerHTML = `
+      <a href="/auth"
+        class="bg-primary text-on-primary px-6 py-2 rounded-md font-label text-sm font-bold hover:bg-primary-container transition-colors active:opacity-80">
+        Login
+      </a>`;
+  }
+}
+
+function logout() {
+  localStorage.removeItem('shelf_token');
+  state.user = null;
+  state.cartCount = 0;
+  renderAuthArea();
+  updateCartBadge(0);
+  showToast('Logged out successfully.');
+}
+
+// ──────────────────────────────────────────────────
+//  Cart Badge
+// ──────────────────────────────────────────────────
+async function loadCartCount() {
+  if (!TOKEN()) return;
+  const data = await apiFetch('/api/cart');
+  if (data.status === 'ok') {
+    const count = (data.data.items || []).length;
+    updateCartBadge(count);
+  }
+}
+
+function updateCartBadge(count) {
+  state.cartCount = count;
+  const badge = document.getElementById('cart-badge');
+  if (count > 0) {
+    badge.textContent = count > 9 ? '9+' : count;
+    badge.classList.remove('hidden');
+    badge.classList.add('badge-pop');
+    setTimeout(() => badge.classList.remove('badge-pop'), 300);
+  } else {
+    badge.classList.add('hidden');
+  }
+}
+
+// ──────────────────────────────────────────────────
+//  Mood Pills
+// ──────────────────────────────────────────────────
+function renderMoodPills() {
+  const container = document.getElementById('mood-pills');
+  container.innerHTML = MOODS.map(mood => `
+    <button
+      data-mood="${mood}"
+      class="mood-pill whitespace-nowrap px-8 py-3 rounded-full bg-surface-container text-on-surface/70 font-label text-sm font-medium hover:bg-surface-container-high transition-all border border-transparent"
+      onclick="toggleMood(this, '${mood}')">
+      ${mood}
+    </button>
+  `).join('');
+}
+
+function toggleMood(btn, mood) {
+  const pills = document.querySelectorAll('.mood-pill');
+  if (state.activeMood === mood) {
+    // deactivate
+    state.activeMood = null;
+    btn.classList.remove('active');
+    loadBooks();
+  } else {
+    state.activeMood = mood;
+    pills.forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    searchBooks('', 'keyword', mood);
+  }
+}
+
+// ──────────────────────────────────────────────────
+//  Search Mode Toggle
+// ──────────────────────────────────────────────────
+function initToggle() {
+  const toggle = document.getElementById('mode-toggle');
+  const knob   = document.getElementById('toggle-knob');
+  const lKw    = document.getElementById('label-keyword');
+  const lSem   = document.getElementById('label-semantic');
+
+  toggle.addEventListener('click', () => {
+    state.mode = state.mode === 'semantic' ? 'keyword' : 'semantic';
+    const isSemantic = state.mode === 'semantic';
+
+    knob.style.transform = isSemantic ? 'translateX(1.25rem)' : 'translateX(0)';
+    toggle.style.backgroundColor = isSemantic ? '' : '#fed977';
+    lKw.classList.toggle('font-bold',   !isSemantic);
+    lKw.classList.toggle('text-primary', !isSemantic);
+    lKw.classList.toggle('text-on-surface/60', isSemantic);
+    lSem.classList.toggle('font-bold',   isSemantic);
+    lSem.classList.toggle('text-primary', isSemantic);
+    lSem.classList.toggle('text-on-surface/60', !isSemantic);
+
+    const icon = document.getElementById('search-icon');
+    icon.textContent = isSemantic ? 'auto_awesome' : 'search';
+
+    if (state.query) searchBooks(state.query);
+  });
+}
+
+// ──────────────────────────────────────────────────
+//  Books: Load All
+// ──────────────────────────────────────────────────
+async function loadBooks(append = false) {
+  if (!append) {
+    state.offset = 0;
+    clearMoodPills();
+    showSkeletons();
+  }
+
+  const data = await apiFetch(`/api/books?limit=${state.limit}&offset=${state.offset}`);
+  if (data.status !== 'ok') return;
+
+  const books = data.data || [];
+  state.offset += books.length;
+  state.totalLoaded = append ? state.totalLoaded + books.length : books.length;
+
+  updateCatalogHeading('All Books', state.totalLoaded);
+  renderBooks(books, append);
+
+  document.getElementById('load-more-wrap').classList.toggle('hidden', books.length < state.limit);
+  document.getElementById('search-info').classList.add('hidden');
+}
+
+// ──────────────────────────────────────────────────
+//  Books: Search
+// ──────────────────────────────────────────────────
+async function searchBooks(query, modeOverride = null, mood = null) {
+  state.query = query;
+  const mode = modeOverride || state.mode;
+
+  showSkeletons();
+
+  let url = `/api/search?limit=${state.limit}`;
+  if (query) url += `&q=${encodeURIComponent(query)}&mode=${mode}`;
+  if (mood)  url += `&mood=${encodeURIComponent(mood)}`;
+
+  const data = await apiFetch(url);
+  if (data.status !== 'ok') { showToast('Search failed. Please try again.', 'error'); return; }
+
+  const { books = [], total = 0, mode: resMode, query: resQuery } = data.data;
+
+  let heading = query
+    ? `Results for "${query}"`
+    : mood
+    ? `Mood: ${mood}`
+    : 'All Books';
+
+  updateCatalogHeading(heading, total);
+  renderBooks(books, false);
+
+  // Show info bar
+  if (query || mood) {
+    const info = document.getElementById('search-info');
+    const txt  = document.getElementById('search-info-text');
+    info.classList.remove('hidden');
+    txt.textContent = `${total} book${total !== 1 ? 's' : ''} found${resMode === 'semantic' ? ' via AI semantic search' : ''}`;
+  } else {
+    document.getElementById('search-info').classList.add('hidden');
+  }
+
+  document.getElementById('load-more-wrap').classList.add('hidden');
+}
+
+// ──────────────────────────────────────────────────
+//  Render Books
+// ──────────────────────────────────────────────────
+function showSkeletons() {
+  const grid = document.getElementById('books-grid');
+  grid.classList.add('loading');
+}
+
+function renderBooks(books, append = false) {
+  const grid  = document.getElementById('books-grid');
+  const empty = document.getElementById('empty-state');
+
+  grid.classList.remove('loading');
+
+  if (!append) grid.innerHTML = '';
+
+  if (books.length === 0 && !append) {
+    empty.classList.remove('hidden');
+    return;
+  }
+  empty.classList.add('hidden');
+
+  books.forEach((book, i) => {
+    const card = createBookCard(book, i);
+    grid.appendChild(card);
+  });
+}
+
+function createBookCard(book, idx) {
+  const card = document.createElement('div');
+  card.className = 'flex flex-col group cursor-pointer';
+
+  const score = book.similarity_score
+    ? `<span class="score-badge text-[10px] font-label font-bold text-primary/60 px-2 py-0.5 rounded-full">${Math.round(book.similarity_score * 100)}% match</span>`
+    : '';
+
+  const stockBadge = book.stock === 0
+    ? `<span class="text-[10px] font-label font-bold text-error uppercase tracking-wider">Out of Stock</span>`
+    : book.stock <= 10
+    ? `<span class="text-[10px] font-label font-bold text-secondary uppercase tracking-wider">Only ${book.stock} left</span>`
+    : '';
+
+  const moodTag = book.mood_tags
+    ? `<span class="text-[10px] font-label uppercase tracking-widest text-secondary/60">${book.mood_tags.split(',')[0].trim()}</span>`
+    : '';
+
+  card.innerHTML = `
+    <a href="/book/${book.book_id}" class="block">
+      <div class="aspect-[2/3] overflow-hidden bg-surface-container rounded-sm shadow-sm transition-transform duration-500 group-hover:-translate-y-2 mb-6 relative book-cover-fallback">
+        <img
+          src="${coverSrc(book.cover_url, idx)}"
+          alt="${book.title}"
+          class="w-full h-full object-cover"
+          loading="lazy"
+          onerror="this.style.display='none'"
+        />
+        ${score ? `<div class="absolute top-3 left-3">${score}</div>` : ''}
+      </div>
+    </a>
+
+    <div class="flex justify-between items-start mb-1">
+      <a href="/book/${book.book_id}" class="block">
+        <h4 class="font-headline text-xl text-primary font-bold group-hover:text-secondary transition-colors leading-snug pr-2">
+          ${escHtml(book.title)}
+        </h4>
+      </a>
+      <div class="flex items-center text-secondary shrink-0">
+        <span class="material-symbols-outlined text-sm" style="font-variation-settings:'FILL' 1">star</span>
+        <span class="text-xs font-label font-bold ml-1">${parseFloat(book.avg_rating || 0).toFixed(1)}</span>
+      </div>
+    </div>
+
+    <p class="font-label text-xs uppercase tracking-widest text-on-surface/60 mb-1 italic">
+      ${escHtml(book.author || '')}
+    </p>
+
+    <div class="flex items-center gap-2 mb-4">
+      ${moodTag}
+      ${stockBadge}
+    </div>
+
+    <div class="mt-auto flex items-center justify-between">
+      <span class="text-xl font-headline font-bold text-primary">${formatINR(book.price)}</span>
+      <button
+        class="add-to-cart-btn text-primary text-xs font-label font-extrabold border-b-2 border-primary/20 pb-1 hover:border-primary transition-all ${book.stock === 0 ? 'opacity-40 cursor-not-allowed' : ''}"
+        data-book-id="${book.book_id}"
+        data-title="${escHtml(book.title)}"
+        ${book.stock === 0 ? 'disabled' : ''}>
+        ADD TO CART
+      </button>
+    </div>
+  `;
+
+  // Cart button handler
+  const cartBtn = card.querySelector('.add-to-cart-btn');
+  cartBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    addToCart(book.book_id, book.title);
+  });
+
+  return card;
+}
+
+function escHtml(str) {
+  return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function updateCatalogHeading(text, count) {
+  document.getElementById('catalog-heading').textContent = text;
+  document.getElementById('catalog-count').textContent   = count ? `${count} book${count !== 1 ? 's' : ''}` : '';
+}
+
+function clearMoodPills() {
+  state.activeMood = null;
+  document.querySelectorAll('.mood-pill').forEach(p => p.classList.remove('active'));
+}
+
+// ──────────────────────────────────────────────────
+//  Add to Cart
+// ──────────────────────────────────────────────────
+async function addToCart(bookId, title) {
+  if (!TOKEN()) {
+    showToast('Please login to add books to cart.', 'error');
+    setTimeout(() => window.location.href = '/auth', 1200);
+    return;
+  }
+
+  const data = await apiFetch('/api/cart/add', {
+    method: 'POST',
+    body: JSON.stringify({ book_id: bookId, quantity: 1 })
+  });
+
+  if (data.status === 'ok') {
+    showToast(`"${title}" added to cart!`);
+    updateCartBadge(state.cartCount + 1);
+  } else {
+    showToast(data.message || 'Could not add to cart.', 'error');
+  }
+}
+
+// ──────────────────────────────────────────────────
+//  Search Event Wiring
+// ──────────────────────────────────────────────────
+function initSearch() {
+  const input  = document.getElementById('search-input');
+  const btn    = document.getElementById('search-btn');
+  const clear  = document.getElementById('clear-search');
+  const explore = document.getElementById('explore-all-btn');
+  const emptyBrowse = document.getElementById('empty-browse-btn');
+
+  let debounceTimer;
+
+  btn.addEventListener('click', () => {
+    const q = input.value.trim();
+    clearMoodPills();
+    if (q) searchBooks(q);
+    else    loadBooks();
+  });
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') btn.click();
+  });
+
+  input.addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      const q = input.value.trim();
+      if (q.length >= 3) {
+        clearMoodPills();
+        searchBooks(q);
+      }
+    }, 600);
+  });
+
+  clear.addEventListener('click', () => {
+    input.value = '';
+    state.query = '';
+    clearMoodPills();
+    loadBooks();
+  });
+
+  explore.addEventListener('click', () => {
+    input.value = '';
+    state.query = '';
+    clearMoodPills();
+    loadBooks();
+    window.scrollTo({ top: document.getElementById('books-grid').offsetTop - 100, behavior: 'smooth' });
+  });
+
+  emptyBrowse.addEventListener('click', () => {
+    input.value = '';
+    state.query = '';
+    clearMoodPills();
+    loadBooks();
+  });
+}
+
+// ──────────────────────────────────────────────────
+//  Load More
+// ──────────────────────────────────────────────────
+function initLoadMore() {
+  document.getElementById('load-more-btn').addEventListener('click', () => {
+    loadBooks(true);
+  });
+}
+
+// ──────────────────────────────────────────────────
+//  Newsletter
+// ──────────────────────────────────────────────────
+function initNewsletter() {
+  document.getElementById('newsletter-btn').addEventListener('click', () => {
+    const email = document.getElementById('newsletter-email').value.trim();
+    const msg   = document.getElementById('newsletter-msg');
+    if (!email || !email.includes('@')) {
+      msg.textContent = 'Please enter a valid email address.';
+      msg.classList.remove('hidden', 'text-secondary-container');
+      msg.classList.add('text-error-container');
+      return;
+    }
+    msg.textContent = '✓ You\'re on the list! Watch your inbox for our first digest.';
+    msg.classList.remove('hidden', 'text-error-container');
+    msg.classList.add('text-secondary-container');
+    document.getElementById('newsletter-email').value = '';
+  });
+}
+
+// ──────────────────────────────────────────────────
+//  URL Query Param Support  (?q=...)
+// ──────────────────────────────────────────────────
+function checkURLParams() {
+  const params = new URLSearchParams(window.location.search);
+  const q      = params.get('q');
+  const browse = params.get('browse');
+  if (q) {
+    document.getElementById('search-input').value = q;
+    searchBooks(q);
+  } else if (browse === 'all') {
+    loadBooks();
+  } else {
+    loadBooks();
+  }
+}
+
+// ──────────────────────────────────────────────────
+//  INIT
+// ──────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+  renderMoodPills();
+  initToggle();
+  initSearch();
+  initLoadMore();
+  initNewsletter();
+  await loadUser();
+  await loadCartCount();
+  checkURLParams();
+});
+</script>
+
+</body>
+</html>

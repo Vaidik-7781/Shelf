@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Shelf Admin — Digital Curator</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&family=Manrope:wght@200..800&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode:"class",
+      theme:{
+        extend:{
+          colors:{
+            "primary-fixed-dim":"#b7c6ee","primary-container":"#1b2a4a","on-primary-fixed":"#0a1a3a",
+            "tertiary-fixed":"#f8e0ae","secondary-fixed-dim":"#e6c364","secondary":"#755b00",
+            "inverse-primary":"#b7c6ee","tertiary":"#1f1500","outline-variant":"#c5c6cf",
+            "inverse-on-surface":"#f5f0e8","surface-bright":"#fef9f1","on-secondary":"#ffffff",
+            "on-background":"#1d1c17","on-secondary-container":"#785d00","on-primary":"#ffffff",
+            "surface-container-low":"#f8f3eb","surface-dim":"#ded9d2","on-tertiary":"#ffffff",
+            "on-error":"#ffffff","tertiary-container":"#362906","tertiary-fixed-dim":"#dbc494",
+            "on-surface-variant":"#45464e","surface":"#fef9f1","primary-fixed":"#d9e2ff",
+            "on-surface":"#1d1c17","primary":"#041534","surface-container-lowest":"#ffffff",
+            "error-container":"#ffdad6","on-primary-container":"#8392b7",
+            "on-secondary-fixed-variant":"#584400","surface-variant":"#e7e2da",
+            "background":"#fef9f1","surface-container-highest":"#e7e2da",
+            "surface-container-high":"#ece8e0","outline":"#75777f","on-secondary-fixed":"#241a00",
+            "error":"#ba1a1a","on-error-container":"#93000a","surface-tint":"#4f5e81",
+            "on-tertiary-fixed-variant":"#544520","inverse-surface":"#32302b",
+            "on-tertiary-fixed":"#251a00","surface-container":"#f2ede5",
+            "on-tertiary-container":"#a49064","on-primary-fixed-variant":"#384668",
+            "secondary-fixed":"#ffe08f","secondary-container":"#fed977"
+          },
+          fontFamily:{"headline":["Newsreader","serif"],"body":["Manrope","sans-serif"],"label":["Manrope","sans-serif"]},
+          borderRadius:{"DEFAULT":"0.125rem","lg":"0.25rem","xl":"0.5rem","full":"0.75rem"}
+        }
+      }
+    }
+  </script>
+  <style>
+    .material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;vertical-align:middle;}
+    body{background:#fef9f1;color:#1d1c17;font-family:'Manrope',sans-serif;}
+    h1,h2,h3,.font-serif{font-family:'Newsreader',serif;}
+
+    /* sidebar nav active */
+    .nav-item{transition:all 0.15s;}
+    .nav-item:hover{background:rgba(255,255,255,0.07);color:#fff;}
+    .nav-item.active{background:rgba(255,255,255,0.12);color:#fff;border-left:3px solid #e6c364;}
+
+    /* section panels */
+    .admin-panel{display:none;}
+    .admin-panel.active{display:block;}
+
+    /* skeleton */
+    .skeleton{background:linear-gradient(90deg,#f2ede5 25%,#ece8e0 50%,#f2ede5 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;}
+    @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+    /* toast */
+    #toast{transition:all 0.35s cubic-bezier(0.34,1.56,0.64,1);}
+    #toast.show{transform:translateY(0) !important;opacity:1 !important;}
+
+    /* bar chart */
+    .bar{transition:height 0.6s cubic-bezier(0.34,1.56,0.64,1);}
+
+    /* modal */
+    #book-modal,#confirm-modal{display:none;}
+    #book-modal.open,#confirm-modal.open{display:flex;}
+
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .spin{animation:spin 0.7s linear infinite;display:inline-block;}
+
+    /* table row hover */
+    .trow:hover{background:rgba(255,255,255,0.7);}
+
+    /* status pills */
+    .s-pending    {background:#fef9f1;color:#755b00;border:1px solid #e6c364;}
+    .s-processing {background:#d9e2ff;color:#384668;border:1px solid #b7c6ee;}
+    .s-shipped    {background:#fed977;color:#785d00;border:1px solid #e6c364;}
+    .s-delivered  {background:#f8e0ae;color:#544520;border:1px solid #dbc494;}
+    .s-cancelled  {background:#ffdad6;color:#93000a;border:1px solid #ba1a1a;}
+
+    input,select,textarea{font-family:'Manrope',sans-serif;}
+    .shelf-input{background:#f8f3eb;border:1px solid rgba(197,198,207,0.3);border-radius:0.5rem;padding:0.65rem 1rem;color:#1d1c17;outline:none;transition:border-color 0.2s,box-shadow 0.2s;width:100%;}
+    .shelf-input:focus{border-color:rgba(117,91,0,0.5);box-shadow:0 0 0 1px rgba(117,91,0,0.3);}
+    .shelf-input::placeholder{color:rgba(69,70,78,0.35);}
+  </style>
+</head>
+
+<body class="bg-surface font-body">
+
+<!-- ══════════════════════════════════════════════
+     SIDEBAR
+═══════════════════════════════════════════════ -->
+<aside class="h-screen w-64 fixed left-0 top-0 bg-slate-900 shadow-2xl flex flex-col p-6 justify-between z-50">
+  <div class="space-y-7">
+    <div>
+      <span class="text-2xl font-bold tracking-tighter text-white font-serif italic">Shelf Admin</span>
+      <p class="font-label uppercase tracking-widest text-[10px] text-slate-400 mt-1">Digital Curator</p>
+    </div>
+
+    <nav class="flex flex-col gap-1" id="sidebar-nav">
+      <a data-section="dashboard"
+         class="nav-item active flex items-center gap-3 px-4 py-3 text-white rounded-lg font-label cursor-pointer"
+         onclick="showSection('dashboard')">
+        <span class="material-symbols-outlined text-sm">dashboard</span>
+        <span>Dashboard</span>
+      </a>
+      <a data-section="inventory"
+         class="nav-item flex items-center gap-3 px-4 py-3 text-slate-400 rounded-lg font-label cursor-pointer"
+         onclick="showSection('inventory')">
+        <span class="material-symbols-outlined text-sm">menu_book</span>
+        <span>Inventory</span>
+      </a>
+      <a data-section="orders"
+         class="nav-item flex items-center gap-3 px-4 py-3 text-slate-400 rounded-lg font-label cursor-pointer"
+         onclick="showSection('orders')">
+        <span class="material-symbols-outlined text-sm">shopping_cart</span>
+        <span>Orders</span>
+      </a>
+      <a data-section="analytics"
+         class="nav-item flex items-center gap-3 px-4 py-3 text-slate-400 rounded-lg font-label cursor-pointer"
+         onclick="showSection('analytics')">
+        <span class="material-symbols-outlined text-sm">insights</span>
+        <span>Analytics</span>
+      </a>
+      <a data-section="search-logs"
+         class="nav-item flex items-center gap-3 px-4 py-3 text-slate-400 rounded-lg font-label cursor-pointer"
+         onclick="showSection('search-logs')">
+        <span class="material-symbols-outlined text-sm">manage_search</span>
+        <span>Search Logs</span>
+      </a>
+    </nav>
+
+    <button onclick="openAddBookModal()"
+            class="w-full py-3 bg-secondary-container text-on-secondary-container font-label font-bold rounded-lg hover:bg-secondary-fixed transition-colors flex items-center justify-center gap-2 text-sm">
+      <span class="material-symbols-outlined text-sm">add</span>
+      Add New Title
+    </button>
+  </div>
+
+  <div class="flex flex-col gap-1">
+    <a href="/" class="nav-item flex items-center gap-3 px-4 py-3 text-slate-400 rounded-lg font-label cursor-pointer text-sm">
+      <span class="material-symbols-outlined text-sm">home</span>
+      <span>View Storefront</span>
+    </a>
+    <a onclick="logout()" class="nav-item flex items-center gap-3 px-4 py-3 text-slate-400 rounded-lg font-label cursor-pointer text-sm">
+      <span class="material-symbols-outlined text-sm">logout</span>
+      <span>Logout</span>
+    </a>
+  </div>
+</aside>
+
+<!-- ══════════════════════════════════════════════
+     TOP BAR
+═══════════════════════════════════════════════ -->
+<header class="fixed top-0 right-0 w-[calc(100%-16rem)] z-40 bg-[#fef9f1]/90 backdrop-blur-xl flex items-center justify-between px-10 py-4 border-b border-outline-variant/15">
+  <h1 id="page-title" class="font-headline text-2xl font-bold tracking-tight text-[#041534]">Dashboard Overview</h1>
+  <div class="flex items-center gap-6">
+    <div class="relative flex items-center bg-[#f2ede5] rounded-full px-4 py-2">
+      <span class="material-symbols-outlined text-slate-500 mr-2 text-base">search</span>
+      <input id="admin-search" class="bg-transparent border-none focus:ring-0 text-sm w-56 placeholder:text-slate-500 outline-none font-label"
+             placeholder="Search archive…" type="text"/>
+    </div>
+    <span id="admin-name" class="text-sm font-label font-bold text-primary hidden md:block"></span>
+    <div class="w-9 h-9 rounded-full bg-primary-container flex items-center justify-center text-on-primary font-serif font-bold text-sm" id="admin-avatar">A</div>
+  </div>
+</header>
+
+<!-- ══════════════════════════════════════════════
+     MAIN CANVAS
+═══════════════════════════════════════════════ -->
+<main class="ml-64 pt-24 px-10 pb-16 min-h-screen">
+
+  <!-- Access denied (shown if not admin) -->
+  <div id="access-denied" class="hidden text-center py-32">
+    <span class="material-symbols-outlined text-6xl text-error/40 block mb-4">lock</span>
+    <h2 class="font-headline text-3xl text-primary mb-3">Admin Access Required</h2>
+    <p class="text-on-surface-variant mb-6 font-label">You must be logged in as an admin to view this page.</p>
+    <a href="/auth" class="bg-primary text-on-primary px-8 py-3 rounded-lg font-label font-bold text-sm">Login as Admin</a>
+  </div>
+
+  <!-- ─────────────────────────────────────────
+       DASHBOARD PANEL
+  ───────────────────────────────────────────── -->
+  <div id="panel-dashboard" class="admin-panel active">
+
+    <!-- Stat Cards -->
+    <section class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+      <div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm flex flex-col justify-between h-32 hover:bg-white transition-all border border-outline-variant/15">
+        <span class="font-label uppercase tracking-widest text-[10px] text-on-surface-variant font-bold">Total Books</span>
+        <div class="flex items-end justify-between">
+          <span id="stat-books" class="font-headline text-3xl font-bold text-primary">—</span>
+          <span class="material-symbols-outlined text-secondary/60">menu_book</span>
+        </div>
+      </div>
+      <div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm flex flex-col justify-between h-32 hover:bg-white transition-all border border-outline-variant/15">
+        <span class="font-label uppercase tracking-widest text-[10px] text-on-surface-variant font-bold">Total Orders</span>
+        <div class="flex items-end justify-between">
+          <span id="stat-orders" class="font-headline text-3xl font-bold text-primary">—</span>
+          <span class="material-symbols-outlined text-secondary/60">shopping_cart</span>
+        </div>
+      </div>
+      <div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm flex flex-col justify-between h-32 hover:bg-white transition-all border border-outline-variant/15">
+        <span class="font-label uppercase tracking-widest text-[10px] text-on-surface-variant font-bold">Revenue This Week</span>
+        <div class="flex items-end justify-between">
+          <span id="stat-revenue" class="font-headline text-3xl font-bold text-primary">—</span>
+          <span class="text-green-700 text-[10px] font-bold font-label" id="stat-revenue-label">● Live</span>
+        </div>
+      </div>
+      <div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm flex flex-col justify-between h-32 hover:bg-white transition-all border border-outline-variant/15 ring-1 ring-error/20 cursor-pointer"
+           onclick="showSection('inventory')">
+        <span class="font-label uppercase tracking-widest text-[10px] text-error font-bold">Low Stock Alerts</span>
+        <div class="flex items-end justify-between">
+          <span id="stat-lowstock" class="font-headline text-3xl font-bold text-error">—</span>
+          <span class="text-error text-xs font-bold underline font-label">View Items →</span>
+        </div>
+      </div>
+    </section>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+
+      <!-- Revenue chart + Low stock table -->
+      <div class="lg:col-span-2 space-y-6">
+        <!-- Bar chart -->
+        <div class="bg-surface-container p-8 rounded-xl flex flex-col h-96">
+          <div class="flex justify-between items-center mb-8">
+            <h2 class="font-headline text-xl font-bold text-primary">Revenue Trends (Last 7 Days)</h2>
+            <span class="text-xs font-label text-on-surface-variant">All values in ₹</span>
+          </div>
+          <div id="revenue-chart" class="flex-1 flex items-end justify-between gap-3 px-2">
+            <!-- bars rendered by JS -->
+            <div class="flex-1 flex flex-col items-center gap-2">
+              <div class="w-full skeleton rounded-t-sm h-1/2"></div>
+              <span class="text-[10px] font-bold text-on-surface-variant">…</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Low stock table -->
+        <div class="bg-surface-container-low rounded-xl p-8 border border-outline-variant/15">
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="font-headline text-xl font-bold text-primary">Critical Low Stock</h2>
+            <button onclick="showSection('inventory')" class="text-secondary font-bold text-xs uppercase tracking-widest hover:underline font-label">Manage All →</button>
+          </div>
+          <table class="w-full text-left">
+            <thead class="border-b border-outline-variant/20">
+              <tr>
+                <th class="pb-3 font-label uppercase tracking-widest text-[10px] text-on-surface-variant">Book Title</th>
+                <th class="pb-3 font-label uppercase tracking-widest text-[10px] text-on-surface-variant text-center">Stock</th>
+                <th class="pb-3 font-label uppercase tracking-widest text-[10px] text-on-surface-variant text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody id="low-stock-tbody" class="divide-y divide-outline-variant/10">
+              <tr><td colspan="3" class="py-6 text-center text-on-surface-variant/50 text-sm font-label">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Right: Recent orders + Top books -->
+      <div class="space-y-8">
+        <div class="bg-surface-container-highest/50 rounded-xl p-8 border border-outline-variant/15">
+          <h2 class="font-headline text-xl font-bold text-primary mb-6">Recent Orders</h2>
+          <div id="recent-orders-list" class="space-y-5">
+            <div class="text-on-surface-variant/50 text-sm font-label text-center py-4">Loading…</div>
+          </div>
+          <button onclick="showSection('orders')"
+                  class="w-full mt-6 py-3 border border-primary/20 rounded-lg text-primary font-bold text-xs uppercase tracking-widest hover:bg-primary hover:text-white transition-all font-label">
+            All Orders
+          </button>
+        </div>
+
+        <!-- Curator Insights / top books -->
+        <div class="bg-primary text-white rounded-xl p-8 shadow-2xl">
+          <div class="flex items-center gap-3 mb-6">
+            <span class="material-symbols-outlined text-secondary">auto_awesome</span>
+            <h2 class="font-headline text-xl font-bold italic">Top Sellers</h2>
+          </div>
+          <p class="text-xs text-blue-200/60 uppercase tracking-widest font-label font-bold mb-4">This Month</p>
+          <div id="top-books-list" class="space-y-3">
+            <div class="text-blue-200/40 text-sm font-label text-center py-2">Loading…</div>
+          </div>
+          <div class="mt-6 pt-5 border-t border-white/10">
+            <p class="text-[10px] text-blue-200/40 leading-relaxed font-label">
+              Data refreshed from live order history. INR pricing throughout.
+            </p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────
+       INVENTORY PANEL
+  ───────────────────────────────────────────── -->
+  <div id="panel-inventory" class="admin-panel">
+    <div class="bg-surface-container rounded-xl overflow-hidden">
+      <div class="px-8 py-6 flex items-center justify-between border-b border-outline-variant/20">
+        <div>
+          <h2 class="font-headline text-2xl font-bold text-primary">Master Inventory</h2>
+          <p class="text-xs text-on-surface-variant font-label mt-1">All books in your catalogue</p>
+        </div>
+        <button onclick="openAddBookModal()"
+                class="px-6 py-2 bg-primary text-on-primary text-xs font-bold uppercase tracking-widest hover:bg-primary-container transition-colors font-label rounded-sm flex items-center gap-2">
+          <span class="material-symbols-outlined text-sm">add</span>Add Book
+        </button>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left">
+          <thead class="bg-surface-container-high/60">
+            <tr>
+              <th class="px-6 py-4 font-label uppercase tracking-widest text-[10px] text-on-surface-variant">Cover</th>
+              <th class="px-6 py-4 font-label uppercase tracking-widest text-[10px] text-on-surface-variant">Title &amp; Author</th>
+              <th class="px-6 py-4 font-label uppercase tracking-widest text-[10px] text-on-surface-variant">Price (₹)</th>
+              <th class="px-6 py-4 font-label uppercase tracking-widest text-[10px] text-on-surface-variant">Stock</th>
+              <th class="px-6 py-4 font-label uppercase tracking-widest text-[10px] text-on-surface-variant text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="inventory-tbody" class="divide-y divide-outline-variant/10">
+            <tr><td colspan="5" class="py-12 text-center text-on-surface-variant/50 font-label">Loading inventory…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────
+       ORDERS PANEL
+  ───────────────────────────────────────────── -->
+  <div id="panel-orders" class="admin-panel">
+    <div class="bg-surface-container rounded-xl overflow-hidden">
+      <div class="px-8 py-6 border-b border-outline-variant/20">
+        <h2 class="font-headline text-2xl font-bold text-primary">All Orders</h2>
+        <p class="text-xs text-on-surface-variant font-label mt-1">Update fulfilment status per order</p>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left">
+          <thead class="bg-surface-container-high/60">
+            <tr>
+              <th class="px-6 py-4 font-label uppercase tracking-widest text-[10px] text-on-surface-variant">Order ID</th>
+              <th class="px-6 py-4 font-label uppercase tracking-widest text-[10px] text-on-surface-variant">Customer</th>
+              <th class="px-6 py-4 font-label uppercase tracking-widest text-[10px] text-on-surface-variant">Date</th>
+              <th class="px-6 py-4 font-label uppercase tracking-widest text-[10px] text-on-surface-variant">Items</th>
+              <th class="px-6 py-4 font-label uppercase tracking-widest text-[10px] text-on-surface-variant">Total (₹)</th>
+              <th class="px-6 py-4 font-label uppercase tracking-widest text-[10px] text-on-surface-variant">Status</th>
+            </tr>
+          </thead>
+          <tbody id="orders-tbody" class="divide-y divide-outline-variant/10">
+            <tr><td colspan="6" class="py-12 text-center text-on-surface-variant/50 font-label">Loading orders…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────
+       ANALYTICS PANEL
+  ───────────────────────────────────────────── -->
+  <div id="panel-analytics" class="admin-panel">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+      <div class="bg-surface-container-lowest p-8 rounded-xl border border-outline-variant/15 shadow-sm">
+        <p class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant font-bold mb-3">Total Revenue (All Time)</p>
+        <p id="analytics-total-rev" class="font-headline text-4xl font-bold text-primary">—</p>
+      </div>
+      <div class="bg-surface-container-lowest p-8 rounded-xl border border-outline-variant/15 shadow-sm">
+        <p class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant font-bold mb-3">Total Users</p>
+        <p id="analytics-users" class="font-headline text-4xl font-bold text-primary">—</p>
+      </div>
+      <div class="bg-surface-container-lowest p-8 rounded-xl border border-outline-variant/15 shadow-sm">
+        <p class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant font-bold mb-3">Avg. Order Value</p>
+        <p id="analytics-avg" class="font-headline text-4xl font-bold text-primary">—</p>
+      </div>
+    </div>
+    <!-- Top books chart -->
+    <div class="bg-surface-container rounded-xl p-8 border border-outline-variant/15">
+      <h2 class="font-headline text-xl font-bold text-primary mb-6">Top 5 Books by Units Sold</h2>
+      <div id="analytics-top-books" class="space-y-4">
+        <p class="text-on-surface-variant/50 text-sm font-label">Loading…</p>
+      </div>
+    </div>
+    <!-- Rebuild index -->
+    <div class="mt-8 bg-primary-container/10 rounded-xl p-8 border border-primary/10">
+      <div class="flex items-start justify-between">
+        <div>
+          <h3 class="font-headline text-lg font-bold text-primary mb-1">AI Semantic Index</h3>
+          <p class="text-sm text-on-surface-variant font-label">Rebuild the FAISS vector index when you add many books at once.</p>
+        </div>
+        <button onclick="rebuildIndex()"
+                id="rebuild-btn"
+                class="bg-primary text-on-primary px-6 py-3 rounded-md font-label font-bold text-sm hover:bg-primary-container transition-colors flex items-center gap-2 shrink-0 ml-8">
+          <span class="material-symbols-outlined text-sm">refresh</span>
+          <span id="rebuild-btn-text">Rebuild Index</span>
+        </button>
+      </div>
+      <p id="rebuild-msg" class="hidden text-sm font-label font-bold mt-4"></p>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────
+       SEARCH LOGS PANEL
+  ───────────────────────────────────────────── -->
+  <div id="panel-search-logs" class="admin-panel">
+    <div class="bg-primary text-white rounded-xl p-8 mb-6 shadow-xl">
+      <div class="flex items-center gap-3 mb-2">
+        <span class="material-symbols-outlined text-secondary">manage_search</span>
+        <h2 class="font-headline text-2xl font-bold italic">Curator Insights</h2>
+      </div>
+      <p class="text-blue-200/60 text-sm font-label">What are your readers searching for? Live query log from your store.</p>
+    </div>
+    <div class="bg-surface-container rounded-xl overflow-hidden border border-outline-variant/15">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left">
+          <thead class="bg-surface-container-high/60">
+            <tr>
+              <th class="px-6 py-4 font-label uppercase tracking-widest text-[10px] text-on-surface-variant">#</th>
+              <th class="px-6 py-4 font-label uppercase tracking-widest text-[10px] text-on-surface-variant">Query</th>
+              <th class="px-6 py-4 font-label uppercase tracking-widest text-[10px] text-on-surface-variant">User</th>
+              <th class="px-6 py-4 font-label uppercase tracking-widest text-[10px] text-on-surface-variant">Mode</th>
+              <th class="px-6 py-4 font-label uppercase tracking-widest text-[10px] text-on-surface-variant text-center">Results</th>
+              <th class="px-6 py-4 font-label uppercase tracking-widest text-[10px] text-on-surface-variant">Timestamp</th>
+            </tr>
+          </thead>
+          <tbody id="logs-tbody" class="divide-y divide-outline-variant/10">
+            <tr><td colspan="6" class="py-12 text-center text-on-surface-variant/50 font-label">Loading logs…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- FAB -->
+<button onclick="openAddBookModal()"
+        class="fixed bottom-10 right-10 w-16 h-16 bg-secondary text-on-secondary rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-40 group">
+  <span class="material-symbols-outlined text-2xl">add</span>
+  <span class="absolute right-20 bg-primary text-white text-[10px] px-3 py-1 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity font-label font-bold uppercase tracking-widest">Add New Book</span>
+</button>
+
+<!-- ══════════════════════════════════════════════
+     ADD / EDIT BOOK MODAL
+═══════════════════════════════════════════════ -->
+<div id="book-modal"
+     class="fixed inset-0 z-50 items-center justify-center bg-primary/40 backdrop-blur-sm px-4 py-8 overflow-y-auto">
+  <div class="bg-surface-container-lowest rounded-2xl w-full max-w-2xl mx-auto p-10 shadow-2xl border border-outline-variant/10 relative">
+    <button onclick="closeBookModal()" class="absolute top-6 right-6 text-on-surface-variant hover:text-error transition-colors">
+      <span class="material-symbols-outlined">close</span>
+    </button>
+    <h2 id="modal-title" class="font-headline text-2xl font-bold text-primary mb-8">Add New Book</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <div class="md:col-span-2 space-y-1">
+        <label class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant">Title *</label>
+        <input id="m-title" class="shelf-input" placeholder="Book title" type="text"/>
+      </div>
+      <div class="space-y-1">
+        <label class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant">Author Name *</label>
+        <input id="m-author" class="shelf-input" placeholder="Author full name" type="text"/>
+      </div>
+      <div class="space-y-1">
+        <label class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant">Price (₹) *</label>
+        <input id="m-price" class="shelf-input" placeholder="e.g. 349" type="number" min="0" step="0.01"/>
+      </div>
+      <div class="space-y-1">
+        <label class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant">Stock *</label>
+        <input id="m-stock" class="shelf-input" placeholder="e.g. 50" type="number" min="0"/>
+      </div>
+      <div class="space-y-1">
+        <label class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant">Language</label>
+        <select id="m-language" class="shelf-input appearance-none">
+          <option>English</option><option>Hindi</option><option>Tamil</option>
+          <option>Telugu</option><option>Kannada</option><option>Malayalam</option>
+          <option>Bengali</option><option>Marathi</option>
+        </select>
+      </div>
+      <div class="space-y-1">
+        <label class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant">ISBN</label>
+        <input id="m-isbn" class="shelf-input" placeholder="9780123456789" type="text"/>
+      </div>
+      <div class="space-y-1">
+        <label class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant">Published Year</label>
+        <input id="m-year" class="shelf-input" placeholder="2024" type="number"/>
+      </div>
+      <div class="space-y-1">
+        <label class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant">Pages</label>
+        <input id="m-pages" class="shelf-input" placeholder="300" type="number"/>
+      </div>
+      <div class="md:col-span-2 space-y-1">
+        <label class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant">Cover Image URL</label>
+        <input id="m-cover" class="shelf-input" placeholder="https://…" type="url"/>
+      </div>
+      <div class="md:col-span-2 space-y-1">
+        <label class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant">Mood Tags (comma-separated)</label>
+        <input id="m-mood" class="shelf-input" placeholder="e.g. Light & Funny, Emotional, Romantic" type="text"/>
+      </div>
+      <div class="md:col-span-2 space-y-1">
+        <label class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant">Synopsis * (used for AI semantic search)</label>
+        <textarea id="m-synopsis" class="shelf-input resize-none" rows="4"
+                  placeholder="Write a detailed synopsis. This text powers the AI semantic search."></textarea>
+      </div>
+    </div>
+    <p id="modal-error" class="hidden text-xs text-error font-label mt-4"></p>
+    <div class="flex gap-4 mt-8">
+      <button onclick="closeBookModal()"
+              class="flex-1 py-3 border border-primary/20 rounded-md text-primary font-label font-bold text-sm hover:bg-surface-container transition-colors">
+        Cancel
+      </button>
+      <button id="modal-save-btn" onclick="saveBook()"
+              class="flex-1 py-3 bg-primary text-on-primary rounded-md font-label font-bold text-sm hover:bg-primary-container transition-colors flex items-center justify-center gap-2">
+        <span id="modal-save-text">Save Book</span>
+      </button>
+    </div>
+    <input type="hidden" id="m-book-id" value=""/>
+  </div>
+</div>
+
+<!-- Delete confirm modal -->
+<div id="confirm-modal"
+     class="fixed inset-0 z-50 items-center justify-center bg-primary/40 backdrop-blur-sm px-4">
+  <div class="bg-surface-container-lowest rounded-2xl max-w-sm w-full mx-auto p-10 shadow-2xl border border-outline-variant/10 text-center">
+    <span class="material-symbols-outlined text-5xl text-error block mb-4">delete_forever</span>
+    <h3 class="font-headline text-2xl font-bold text-primary mb-2">Delete this book?</h3>
+    <p class="text-on-surface-variant text-sm font-label mb-8">This will hide the book from the storefront. The action cannot be undone easily.</p>
+    <div class="flex gap-4">
+      <button onclick="closeConfirm()"
+              class="flex-1 py-3 border border-primary/20 rounded-md text-primary font-label font-bold text-sm hover:bg-surface-container transition-colors">
+        Cancel
+      </button>
+      <button id="confirm-delete-btn"
+              class="flex-1 py-3 bg-error text-on-error rounded-md font-label font-bold text-sm hover:opacity-90 transition-colors">
+        Delete
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"
+     class="fixed bottom-6 right-6 z-50 bg-primary text-on-primary px-6 py-4 rounded-xl shadow-2xl font-label font-bold text-sm flex items-center gap-3 opacity-0"
+     style="transform:translateY(2rem);">
+  <span id="toast-icon" class="material-symbols-outlined text-base"></span>
+  <span id="toast-msg"></span>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     JAVASCRIPT
+═══════════════════════════════════════════════ -->
+<script>
+// ────────────────────────────────────────────
+//  Globals
+// ────────────────────────────────────────────
+const TOKEN = () => localStorage.getItem('shelf_token');
+let pendingDeleteId = null;
+let editingBookId   = null;
+let adminStats      = {};
+const FALLBACK_COVERS = [
+  'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=80&q=70',
+  'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=80&q=70',
+  'https://images.unsplash.com/photo-1495640388908-05fa85288e61?w=80&q=70',
+  'https://images.unsplash.com/photo-1519682337058-a94d519337bc?w=80&q=70',
+];
+
+// ────────────────────────────────────────────
+//  Utilities
+// ────────────────────────────────────────────
+function formatINR(n) {
+  return '₹' + parseFloat(n || 0).toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+}
+function escHtml(s) {
+  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function coverSrc(url, i) {
+  return (url && url.startsWith('http')) ? url : FALLBACK_COVERS[i % FALLBACK_COVERS.length];
+}
+function formatDate(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
+}
+async function apiFetch(path, opts = {}) {
+  const headers = {'Content-Type':'application/json', ...(opts.headers||{})};
+  if (TOKEN()) headers['Authorization'] = `Bearer ${TOKEN()}`;
+  const res = await fetch(path, {...opts, headers});
+  return res.json();
+}
+function showToast(msg, type = 'success') {
+  const toast = document.getElementById('toast');
+  document.getElementById('toast-icon').textContent = type === 'success' ? 'check_circle' : 'error';
+  document.getElementById('toast-msg').textContent  = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3200);
+}
+function statusPill(s) {
+  const cls = { Pending:'s-pending', Processing:'s-processing', Shipped:'s-shipped', Delivered:'s-delivered', Cancelled:'s-cancelled' }[s] || 's-pending';
+  return `<span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-bold font-label ${cls}">${s}</span>`;
+}
+
+// ────────────────────────────────────────────
+//  Auth check
+// ────────────────────────────────────────────
+async function checkAuth() {
+  if (!TOKEN()) { showDenied(); return false; }
+  const data = await apiFetch('/api/auth/me');
+  if (data.status !== 'ok' || !data.data.is_admin) {
+    showDenied();
+    return false;
+  }
+  const user = data.data;
+  document.getElementById('admin-name').textContent   = user.name;
+  document.getElementById('admin-avatar').textContent = user.name[0].toUpperCase();
+  return true;
+}
+function showDenied() {
+  document.getElementById('access-denied').classList.remove('hidden');
+  document.getElementById('panel-dashboard').classList.remove('active');
+}
+function logout() {
+  localStorage.removeItem('shelf_token');
+  window.location.href = '/auth';
+}
+
+// ────────────────────────────────────────────
+//  Section switching
+// ────────────────────────────────────────────
+const SECTIONS = ['dashboard','inventory','orders','analytics','search-logs'];
+const TITLES   = { dashboard:'Dashboard Overview', inventory:'Master Inventory', orders:'All Orders', analytics:'Analytics & AI', 'search-logs':'Search Logs' };
+
+function showSection(name) {
+  SECTIONS.forEach(s => {
+    const panel = document.getElementById(`panel-${s}`);
+    const nav   = document.querySelector(`[data-section="${s}"]`);
+    if (panel) panel.classList.toggle('active', s === name);
+    if (nav)   nav.classList.toggle('active', s === name);
+  });
+  document.getElementById('page-title').textContent = TITLES[name] || name;
+
+  // Lazy-load per section
+  if (name === 'inventory')    loadInventory();
+  if (name === 'orders')       loadOrders();
+  if (name === 'analytics')    loadAnalytics();
+  if (name === 'search-logs')  loadSearchLogs();
+}
+
+// ────────────────────────────────────────────
+//  Dashboard
+// ────────────────────────────────────────────
+async function loadDashboard() {
+  const data = await apiFetch('/api/admin/stats');
+  if (data.status !== 'ok') return;
+  const s = data.data;
+  adminStats = s;
+
+  document.getElementById('stat-books').textContent    = s.total_books.toLocaleString('en-IN');
+  document.getElementById('stat-orders').textContent   = s.total_orders.toLocaleString('en-IN');
+  document.getElementById('stat-revenue').textContent  = formatINR(s.weekly_revenue);
+  document.getElementById('stat-lowstock').textContent = s.low_stock_count;
+
+  renderRevenueChart(s.weekly_chart || []);
+  renderLowStockTable();
+  renderRecentOrders();
+  renderTopBooks(s.top_books || []);
+}
+
+function renderRevenueChart(chartData) {
+  const container = document.getElementById('revenue-chart');
+  container.innerHTML = '';
+
+  if (!chartData.length) {
+    container.innerHTML = `<div class="w-full text-center text-on-surface-variant/50 text-sm font-label pb-4">No revenue data this week.</div>`;
+    return;
+  }
+
+  const maxRev = Math.max(...chartData.map(d => parseFloat(d.revenue || 0)), 1);
+  const days   = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
+  // Fill 7 days even if some are missing
+  const filled = Array.from({length:7}, (_, i) => {
+    const found = chartData.find(d => new Date(d.day).getDay() === (i + 1) % 7);
+    return { day: days[i], revenue: found ? parseFloat(found.revenue) : 0 };
+  });
+
+  filled.forEach(({day, revenue}) => {
+    const pct  = Math.max((revenue / maxRev) * 100, 4);
+    const isTop = revenue === maxRev && revenue > 0;
+    const div  = document.createElement('div');
+    div.className = 'w-full flex flex-col items-center gap-2';
+    div.innerHTML = `
+      <span class="text-[10px] font-label text-on-surface-variant font-bold">${revenue > 0 ? formatINR(revenue) : ''}</span>
+      <div class="w-full bar rounded-t-sm relative group cursor-pointer ${isTop ? 'bg-secondary-container' : 'bg-primary/10'}" style="height:${pct}%">
+        <div class="absolute inset-0 ${isTop ? 'bg-secondary/30' : 'bg-primary/20'} opacity-0 group-hover:opacity-100 transition-opacity rounded-t-sm"></div>
+      </div>
+      <span class="text-[10px] font-bold text-on-surface-variant font-label">${day}</span>
+    `;
+    container.appendChild(div);
+  });
+}
+
+async function renderLowStockTable() {
+  const data = await apiFetch('/api/admin/low-stock');
+  const tbody = document.getElementById('low-stock-tbody');
+  if (data.status !== 'ok' || !data.data.length) {
+    tbody.innerHTML = `<tr><td colspan="3" class="py-6 text-center text-on-surface-variant/50 text-sm font-label">✓ No critical low stock items.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  data.data.forEach(b => {
+    const isRed = b.stock <= 5;
+    const tr = document.createElement('tr');
+    tr.className = 'trow transition-colors';
+    tr.innerHTML = `
+      <td class="py-4 font-headline italic text-on-surface">${escHtml(b.title)}</td>
+      <td class="py-4 text-center">
+        <span class="px-2 py-1 ${isRed ? 'bg-error-container text-error' : 'bg-secondary-container text-on-secondary-container'} rounded text-xs font-bold font-label">
+          ${b.stock} left
+        </span>
+      </td>
+      <td class="py-4 text-right">
+        <button onclick="openEditBookModal(${b.book_id})"
+                class="text-primary font-bold text-xs underline decoration-secondary/30 hover:decoration-secondary font-label">
+          Edit Stock
+        </button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+async function renderRecentOrders() {
+  const data = await apiFetch('/api/admin/orders');
+  const list = document.getElementById('recent-orders-list');
+  if (data.status !== 'ok' || !data.data.length) {
+    list.innerHTML = `<p class="text-center text-on-surface-variant/50 text-sm font-label py-4">No orders yet.</p>`;
+    return;
+  }
+  const orders = data.data.slice(0, 4);
+  list.innerHTML = '';
+  orders.forEach(o => {
+    const div = document.createElement('div');
+    div.className = 'flex items-start justify-between border-b border-outline-variant/10 pb-4 last:border-0';
+    div.innerHTML = `
+      <div>
+        <p class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-1 font-label">#SH-${o.order_id}</p>
+        <p class="font-headline font-bold text-on-surface italic">${escHtml(o.customer_name || 'User')}</p>
+        <p class="text-[10px] text-on-surface-variant font-label">${formatDate(o.created_at)}</p>
+      </div>
+      <div class="text-right">
+        <p class="font-bold text-primary mb-2 font-label text-sm">${formatINR(o.total_amount)}</p>
+        <select onchange="updateOrderStatus(${o.order_id}, this.value)"
+                class="text-[10px] bg-white border-outline-variant/20 rounded py-1 px-2 font-bold text-secondary uppercase tracking-tight focus:ring-0 font-label cursor-pointer">
+          ${['Pending','Processing','Shipped','Delivered','Cancelled'].map(s =>
+            `<option value="${s}" ${s===o.status?'selected':''}>${s}</option>`
+          ).join('')}
+        </select>
+      </div>
+    `;
+    list.appendChild(div);
+  });
+}
+
+function renderTopBooks(books) {
+  const list = document.getElementById('top-books-list');
+  if (!books.length) {
+    list.innerHTML = `<p class="text-blue-200/40 text-sm font-label text-center">No data yet.</p>`;
+    return;
+  }
+  list.innerHTML = books.map((b, i) => `
+    <div class="flex justify-between items-center text-sm">
+      <span class="text-blue-100 font-label">${i+1}. ${escHtml(b.title)}</span>
+      <span class="text-secondary font-bold font-label">${b.units_sold} sold</span>
+    </div>
+  `).join('');
+}
+
+// ────────────────────────────────────────────
+//  Inventory
+// ────────────────────────────────────────────
+async function loadInventory() {
+  const tbody = document.getElementById('inventory-tbody');
+  tbody.innerHTML = `<tr><td colspan="5" class="py-12 text-center"><div class="skeleton h-4 rounded w-1/2 mx-auto"></div></td></tr>`;
+
+  const data = await apiFetch('/api/admin/books');
+  if (data.status !== 'ok') return;
+
+  tbody.innerHTML = '';
+  data.data.forEach((b, i) => {
+    const stockStatus = b.stock === 0
+      ? `<div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-error"></div><span class="text-xs font-bold text-error font-label">Out of Stock</span></div>`
+      : b.stock <= 10
+      ? `<div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-secondary"></div><span class="text-xs font-bold text-secondary font-label">Low (${b.stock})</span></div>`
+      : `<div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-green-500"></div><span class="text-xs font-bold text-on-surface-variant font-label">In Stock (${b.stock})</span></div>`;
+
+    const tr = document.createElement('tr');
+    tr.className = 'trow transition-colors';
+    tr.innerHTML = `
+      <td class="px-6 py-5">
+        <div class="w-10 h-14 bg-slate-200 rounded shadow-sm overflow-hidden">
+          <img src="${coverSrc(b.cover_url, i)}" alt="${escHtml(b.title)}" class="w-full h-full object-cover" onerror="this.style.display='none'"/>
+        </div>
+      </td>
+      <td class="px-6 py-5">
+        <p class="font-headline font-bold text-primary italic">${escHtml(b.title)}</p>
+        <p class="text-xs text-on-surface-variant font-label">by ${escHtml(b.author || '')}</p>
+        ${!b.is_active ? `<span class="text-[10px] text-error font-label font-bold">HIDDEN</span>` : ''}
+      </td>
+      <td class="px-6 py-5 font-bold text-primary font-label">${formatINR(b.price)}</td>
+      <td class="px-6 py-5">${stockStatus}</td>
+      <td class="px-6 py-5 text-right">
+        <div class="flex justify-end gap-4">
+          <button onclick="openEditBookModal(${b.book_id})"
+                  class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors cursor-pointer">edit</button>
+          <button onclick="confirmDelete(${b.book_id})"
+                  class="material-symbols-outlined text-on-surface-variant hover:text-error transition-colors cursor-pointer">delete</button>
+        </div>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// ────────────────────────────────────────────
+//  Orders
+// ────────────────────────────────────────────
+async function loadOrders() {
+  const tbody = document.getElementById('orders-tbody');
+  const data  = await apiFetch('/api/admin/orders');
+  if (data.status !== 'ok') return;
+  tbody.innerHTML = '';
+
+  if (!data.data.length) {
+    tbody.innerHTML = `<tr><td colspan="6" class="py-12 text-center text-on-surface-variant/50 font-label">No orders found.</td></tr>`;
+    return;
+  }
+
+  data.data.forEach(o => {
+    const itemCount = (o.items||[]).length;
+    const tr = document.createElement('tr');
+    tr.className = 'trow transition-colors';
+    tr.innerHTML = `
+      <td class="px-6 py-4 font-label font-bold text-primary text-sm">#SH-${o.order_id}</td>
+      <td class="px-6 py-4">
+        <p class="font-label font-bold text-on-surface text-sm">${escHtml(o.customer_name||'—')}</p>
+        <p class="text-[10px] text-on-surface-variant font-label">${escHtml(o.email||'')}</p>
+      </td>
+      <td class="px-6 py-4 text-sm text-on-surface-variant font-label">${formatDate(o.created_at)}</td>
+      <td class="px-6 py-4 text-sm text-on-surface-variant font-label">${itemCount} book${itemCount!==1?'s':''}</td>
+      <td class="px-6 py-4 font-bold text-primary font-label text-sm">
+        ${formatINR(o.total_amount)}
+        ${o.discount_amt > 0 ? `<span class="block text-[10px] text-secondary font-normal">−${formatINR(o.discount_amt)}</span>` : ''}
+      </td>
+      <td class="px-6 py-4">
+        <select onchange="updateOrderStatus(${o.order_id}, this.value)"
+                class="text-[10px] bg-white border border-outline-variant/20 rounded py-1.5 px-2 font-bold uppercase tracking-tight focus:ring-secondary/30 focus:ring-1 font-label cursor-pointer outline-none">
+          ${['Pending','Processing','Shipped','Delivered','Cancelled'].map(s =>
+            `<option value="${s}" ${s===o.status?'selected':''}>${s}</option>`
+          ).join('')}
+        </select>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+async function updateOrderStatus(orderId, status) {
+  const data = await apiFetch(`/api/admin/orders/update/${orderId}`, {
+    method: 'PUT',
+    body: JSON.stringify({ status })
+  });
+  if (data.status === 'ok') showToast(`Order #SH-${orderId} → ${status}`);
+  else showToast(data.message || 'Update failed.', 'error');
+}
+
+// ────────────────────────────────────────────
+//  Analytics
+// ────────────────────────────────────────────
+async function loadAnalytics() {
+  const data = await apiFetch('/api/admin/stats');
+  if (data.status !== 'ok') return;
+  const s = data.data;
+
+  document.getElementById('analytics-total-rev').textContent = formatINR(s.total_revenue);
+  document.getElementById('analytics-users').textContent      = s.total_users.toLocaleString('en-IN');
+
+  const avg = s.total_orders > 0 ? s.total_revenue / s.total_orders : 0;
+  document.getElementById('analytics-avg').textContent = formatINR(avg);
+
+  const topBooks = document.getElementById('analytics-top-books');
+  if (!s.top_books.length) {
+    topBooks.innerHTML = `<p class="text-on-surface-variant/50 text-sm font-label">No order data yet.</p>`;
+    return;
+  }
+  const maxUnits = Math.max(...s.top_books.map(b => parseInt(b.units_sold)), 1);
+  topBooks.innerHTML = s.top_books.map(b => {
+    const pct = Math.round((parseInt(b.units_sold) / maxUnits) * 100);
+    return `
+      <div class="space-y-1">
+        <div class="flex justify-between items-center">
+          <span class="text-sm font-label font-bold text-on-surface">${escHtml(b.title)}</span>
+          <span class="text-xs font-label text-secondary font-bold">${b.units_sold} units</span>
+        </div>
+        <div class="h-2 bg-surface-container-high rounded-full overflow-hidden">
+          <div class="h-full bg-secondary rounded-full" style="width:${pct}%"></div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+async function rebuildIndex() {
+  const btn  = document.getElementById('rebuild-btn');
+  const text = document.getElementById('rebuild-btn-text');
+  const msg  = document.getElementById('rebuild-msg');
+  btn.disabled  = true;
+  text.innerHTML = `<span class="material-symbols-outlined text-sm spin">progress_activity</span> Rebuilding…`;
+
+  const data = await apiFetch('/api/admin/rebuild-index', { method: 'POST' });
+  btn.disabled  = false;
+  text.textContent = 'Rebuild Index';
+  msg.classList.remove('hidden');
+
+  if (data.status === 'ok') {
+    msg.textContent = '✓ FAISS index rebuilt successfully. Semantic search is up to date.';
+    msg.className   = 'text-sm font-label font-bold mt-4 text-secondary';
+    showToast('Index rebuilt!');
+  } else {
+    msg.textContent = data.message || 'Rebuild failed.';
+    msg.className   = 'text-sm font-label font-bold mt-4 text-error';
+    showToast('Index rebuild failed.', 'error');
+  }
+}
+
+// ────────────────────────────────────────────
+//  Search Logs
+// ────────────────────────────────────────────
+async function loadSearchLogs() {
+  const tbody = document.getElementById('logs-tbody');
+  const data  = await apiFetch('/api/admin/search-logs?limit=100');
+  if (data.status !== 'ok') return;
+
+  if (!data.data.length) {
+    tbody.innerHTML = `<tr><td colspan="6" class="py-12 text-center text-on-surface-variant/50 font-label">No search logs yet.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  data.data.forEach((log, i) => {
+    const modeBadge = log.search_mode === 'semantic'
+      ? `<span class="px-2 py-0.5 bg-primary-fixed text-on-primary-fixed rounded text-[10px] font-bold font-label">AI</span>`
+      : `<span class="px-2 py-0.5 bg-surface-container-high text-on-surface-variant rounded text-[10px] font-bold font-label">KW</span>`;
+    const tr = document.createElement('tr');
+    tr.className = 'trow transition-colors';
+    tr.innerHTML = `
+      <td class="px-6 py-4 text-xs text-on-surface-variant font-label">${log.log_id}</td>
+      <td class="px-6 py-4 text-sm text-on-surface font-label font-medium max-w-xs truncate">
+        "${escHtml(log.query_text)}"
+      </td>
+      <td class="px-6 py-4 text-xs text-on-surface-variant font-label">${escHtml(log.user_name || 'Guest')}</td>
+      <td class="px-6 py-4">${modeBadge}</td>
+      <td class="px-6 py-4 text-center">
+        <span class="font-bold text-primary font-label text-sm">${log.results_returned}</span>
+      </td>
+      <td class="px-6 py-4 text-xs text-on-surface-variant font-label">${formatDate(log.timestamp)}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// ────────────────────────────────────────────
+//  Book Modal (Add / Edit)
+// ────────────────────────────────────────────
+function openAddBookModal() {
+  editingBookId = null;
+  document.getElementById('modal-title').textContent   = 'Add New Book';
+  document.getElementById('modal-save-text').textContent = 'Save Book';
+  document.getElementById('m-book-id').value = '';
+  ['m-title','m-author','m-price','m-stock','m-isbn','m-year','m-pages','m-cover','m-mood','m-synopsis'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('m-language').value = 'English';
+  document.getElementById('modal-error').classList.add('hidden');
+  document.getElementById('book-modal').classList.add('open');
+}
+
+async function openEditBookModal(bookId) {
+  const data = await apiFetch(`/api/books/${bookId}`);
+  if (data.status !== 'ok') { showToast('Could not load book.', 'error'); return; }
+
+  editingBookId = bookId;
+  const b = data.data;
+  document.getElementById('modal-title').textContent     = 'Edit Book';
+  document.getElementById('modal-save-text').textContent = 'Update Book';
+  document.getElementById('m-book-id').value = bookId;
+  document.getElementById('m-title').value    = b.title || '';
+  document.getElementById('m-author').value   = b.author_name || '';
+  document.getElementById('m-price').value    = b.price || '';
+  document.getElementById('m-stock').value    = b.stock || '';
+  document.getElementById('m-isbn').value     = b.isbn || '';
+  document.getElementById('m-year').value     = b.published_year || '';
+  document.getElementById('m-pages').value    = b.pages || '';
+  document.getElementById('m-cover').value    = b.cover_url || '';
+  document.getElementById('m-mood').value     = b.mood_tags || '';
+  document.getElementById('m-synopsis').value = b.synopsis || '';
+  document.getElementById('m-language').value = b.language || 'English';
+  document.getElementById('modal-error').classList.add('hidden');
+  document.getElementById('book-modal').classList.add('open');
+}
+
+function closeBookModal() {
+  document.getElementById('book-modal').classList.remove('open');
+  editingBookId = null;
+}
+
+async function saveBook() {
+  const title    = document.getElementById('m-title').value.trim();
+  const author   = document.getElementById('m-author').value.trim();
+  const price    = document.getElementById('m-price').value;
+  const stock    = document.getElementById('m-stock').value;
+  const synopsis = document.getElementById('m-synopsis').value.trim();
+  const errEl    = document.getElementById('modal-error');
+
+  if (!title || !author || !price || !stock || !synopsis) {
+    errEl.textContent = 'Title, Author, Price, Stock and Synopsis are required.';
+    errEl.classList.remove('hidden');
+    return;
+  }
+
+  const saveBtn  = document.getElementById('modal-save-btn');
+  const saveText = document.getElementById('modal-save-text');
+  saveBtn.disabled  = true;
+  saveText.innerHTML = `<span class="material-symbols-outlined text-sm spin">progress_activity</span> Saving…`;
+
+  const payload = {
+    title,
+    author_name:    author,
+    price:          parseFloat(price),
+    stock:          parseInt(stock),
+    synopsis,
+    language:       document.getElementById('m-language').value,
+    isbn:           document.getElementById('m-isbn').value.trim(),
+    published_year: document.getElementById('m-year').value || null,
+    pages:          document.getElementById('m-pages').value || null,
+    cover_url:      document.getElementById('m-cover').value.trim(),
+    mood_tags:      document.getElementById('m-mood').value.trim(),
+  };
+
+  let data;
+  if (editingBookId) {
+    data = await apiFetch(`/api/admin/books/edit/${editingBookId}`, { method:'PUT', body:JSON.stringify(payload) });
+  } else {
+    data = await apiFetch('/api/admin/books/add', { method:'POST', body:JSON.stringify(payload) });
+  }
+
+  saveBtn.disabled = false;
+  saveText.textContent = editingBookId ? 'Update Book' : 'Save Book';
+
+  if (data.status === 'ok') {
+    showToast(editingBookId ? 'Book updated!' : 'Book added successfully!');
+    closeBookModal();
+    loadInventory();
+    loadDashboard();
+  } else {
+    errEl.textContent = data.message || 'Save failed. Please try again.';
+    errEl.classList.remove('hidden');
+  }
+}
+
+// ────────────────────────────────────────────
+//  Delete
+// ────────────────────────────────────────────
+function confirmDelete(bookId) {
+  pendingDeleteId = bookId;
+  document.getElementById('confirm-modal').classList.add('open');
+}
+function closeConfirm() {
+  document.getElementById('confirm-modal').classList.remove('open');
+  pendingDeleteId = null;
+}
+document.getElementById('confirm-delete-btn').addEventListener('click', async () => {
+  if (!pendingDeleteId) return;
+  const data = await apiFetch(`/api/admin/books/delete/${pendingDeleteId}`, { method:'DELETE' });
+  closeConfirm();
+  if (data.status === 'ok') {
+    showToast('Book deleted.');
+    loadInventory();
+    loadDashboard();
+  } else {
+    showToast(data.message || 'Delete failed.', 'error');
+  }
+});
+
+// ────────────────────────────────────────────
+//  Admin search bar (filter inventory rows)
+// ────────────────────────────────────────────
+document.getElementById('admin-search').addEventListener('input', (e) => {
+  const q = e.target.value.toLowerCase();
+  document.querySelectorAll('#inventory-tbody tr').forEach(tr => {
+    tr.style.display = tr.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+});
+
+// Close modals on backdrop click
+document.getElementById('book-modal').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) closeBookModal();
+});
+document.getElementById('confirm-modal').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) closeConfirm();
+});
+
+// ────────────────────────────────────────────
+//  INIT
+// ────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+  const ok = await checkAuth();
+  if (!ok) return;
+  await loadDashboard();
+});
+</script>
+</body>
+</html>

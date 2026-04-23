@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Shelf | Your Curation</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&family=Manrope:wght@200..800&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "on-error": "#ffffff", "tertiary-fixed-dim": "#dbc494", "error": "#ba1a1a",
+            "surface-container-high": "#ece8e0", "on-surface": "#1d1c17", "tertiary": "#1f1500",
+            "on-secondary-fixed-variant": "#584400", "on-tertiary-fixed-variant": "#544520",
+            "on-primary-fixed-variant": "#384668", "inverse-primary": "#b7c6ee",
+            "on-secondary-fixed": "#241a00", "on-secondary-container": "#785d00",
+            "inverse-surface": "#32302b", "background": "#fef9f1",
+            "surface-container-lowest": "#ffffff", "primary-fixed": "#d9e2ff",
+            "outline-variant": "#c5c6cf", "outline": "#75777f", "primary-fixed-dim": "#b7c6ee",
+            "primary": "#041534", "on-primary-container": "#8392b7",
+            "surface-container-highest": "#e7e2da", "on-tertiary-fixed": "#251a00",
+            "on-secondary": "#ffffff", "secondary-container": "#fed977",
+            "surface-container": "#f2ede5", "on-primary": "#ffffff", "surface-dim": "#ded9d2",
+            "secondary-fixed-dim": "#e6c364", "secondary": "#755b00", "on-background": "#1d1c17",
+            "surface-container-low": "#f8f3eb", "on-primary-fixed": "#0a1a3a",
+            "inverse-on-surface": "#f5f0e8", "on-surface-variant": "#45464e",
+            "tertiary-container": "#362906", "surface-variant": "#e7e2da",
+            "surface": "#fef9f1", "on-tertiary": "#ffffff", "tertiary-fixed": "#f8e0ae",
+            "primary-container": "#1b2a4a", "secondary-fixed": "#ffe08f",
+            "error-container": "#ffdad6", "on-tertiary-container": "#a49064",
+            "on-error-container": "#93000a", "surface-tint": "#4f5e81", "surface-bright": "#fef9f1"
+          },
+          fontFamily: { "headline": ["Newsreader","serif"], "body": ["Manrope","sans-serif"], "label": ["Manrope","sans-serif"] },
+          borderRadius: { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }
+        }
+      }
+    }
+  </script>
+  <style>
+    .font-newsreader { font-family: 'Newsreader', serif; }
+    .font-manrope    { font-family: 'Manrope', sans-serif; }
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    body { background-color: #fef9f1; color: #1d1c17; font-family: 'Manrope', sans-serif; }
+
+    /* skeleton */
+    .skeleton { background: linear-gradient(90deg,#f2ede5 25%,#ece8e0 50%,#f2ede5 75%); background-size:200% 100%; animation: shimmer 1.5s infinite; }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+    /* toast */
+    #toast { transition: all 0.35s cubic-bezier(0.34,1.56,0.64,1); }
+    #toast.show { transform: translateY(0) !important; opacity: 1 !important; }
+
+    /* qty btn */
+    .qty-btn { transition: all 0.15s; }
+    .qty-btn:hover { color: #755b00; background: #fed977; border-radius: 0.25rem; }
+
+    /* cart item fade out on remove */
+    .cart-item { transition: opacity 0.3s ease, transform 0.3s ease; }
+    .cart-item.removing { opacity: 0; transform: translateX(20px); pointer-events: none; }
+
+    /* coupon applied */
+    .coupon-applied { border-color: #755b00 !important; }
+
+    /* order status badges */
+    .badge-pending    { background:#fef9f1; color:#755b00; border:1px solid #e6c364; }
+    .badge-processing { background:#d9e2ff; color:#384668; border:1px solid #b7c6ee; }
+    .badge-shipped    { background:#fed977; color:#785d00; border:1px solid #e6c364; }
+    .badge-delivered  { background:#f8e0ae; color:#544520; border:1px solid #dbc494; }
+    .badge-cancelled  { background:#ffdad6; color:#93000a; border:1px solid #ba1a1a; }
+
+    /* address textarea */
+    .shelf-input { background:#f8f3eb; border:1px solid rgba(197,198,207,0.3); border-radius:0.5rem; padding:0.75rem 1rem; font-family:'Manrope',sans-serif; color:#1d1c17; outline:none; transition:border-color 0.2s, box-shadow 0.2s; width:100%; }
+    .shelf-input:focus { border-color:rgba(117,91,0,0.5); box-shadow:0 0 0 1px rgba(117,91,0,0.3); }
+    .shelf-input::placeholder { color:rgba(69,70,78,0.35); }
+
+    @keyframes badgePop { 0%,100%{transform:scale(1)} 50%{transform:scale(1.4)} }
+    .badge-pop { animation: badgePop 0.3s ease; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spin { animation: spin 0.7s linear infinite; display: inline-block; }
+  </style>
+</head>
+
+<body class="font-manrope bg-background selection:bg-secondary-container selection:text-on-secondary-container">
+
+<!-- ════════════════════════════════════════════
+     HEADER / NAV
+═════════════════════════════════════════════ -->
+<header class="fixed top-0 w-full z-50 bg-[#fef9f1] border-b border-surface-container-high/60">
+  <nav class="flex justify-between items-center px-8 py-4 max-w-7xl mx-auto">
+    <div class="flex items-center gap-12">
+      <a href="/" class="font-newsreader text-2xl font-bold text-[#041534] tracking-tighter">Shelf</a>
+      <div class="hidden md:flex gap-8 items-center font-newsreader italic text-lg">
+        <a href="/" class="text-[#1d1c17]/60 pb-1 hover:text-[#1b2a4a] transition-colors">Library</a>
+        <a href="/cart" class="text-primary border-b-2 border-primary pb-1">Curation</a>
+      </div>
+    </div>
+    <div class="flex items-center gap-5">
+      <a href="/cart" class="relative flex items-center">
+        <span class="material-symbols-outlined text-primary cursor-pointer hover:scale-95 duration-200">shopping_bag</span>
+        <span id="cart-badge" class="absolute -top-2 -right-2 bg-secondary text-on-secondary text-[10px] font-bold px-1.5 py-0.5 rounded-full hidden">0</span>
+      </a>
+      <span class="material-symbols-outlined text-primary cursor-pointer hover:scale-95 duration-200">person</span>
+      <div id="auth-area">
+        <a href="/auth" class="hidden md:block bg-primary text-on-primary px-5 py-2 text-sm font-label rounded-lg hover:opacity-90 active:scale-95 transition-all">Login</a>
+      </div>
+    </div>
+  </nav>
+</header>
+
+<!-- ════════════════════════════════════════════
+     MAIN
+═════════════════════════════════════════════ -->
+<main class="pt-24 pb-20 px-6 max-w-7xl mx-auto min-h-screen">
+
+  <!-- Page Title -->
+  <header class="mb-12">
+    <h1 class="font-newsreader text-5xl md:text-6xl text-primary font-light mb-2">Your Curation</h1>
+    <p id="cart-subtitle" class="font-manrope text-on-surface-variant tracking-wide text-sm uppercase opacity-70">
+      Loading your selections…
+    </p>
+  </header>
+
+  <!-- Must be logged in -->
+  <div id="login-prompt" class="hidden text-center py-32">
+    <span class="material-symbols-outlined text-6xl text-outline/30 block mb-4">lock</span>
+    <h2 class="font-newsreader text-3xl text-primary mb-3">Sign in to view your cart</h2>
+    <p class="text-on-surface-variant text-sm mb-8 font-manrope">Your curated selections are waiting for you.</p>
+    <a href="/auth?redirect=/cart"
+       class="bg-primary text-on-primary px-10 py-3 rounded-lg font-label font-bold text-sm hover:bg-primary-container transition-colors">
+      Sign In
+    </a>
+  </div>
+
+  <!-- Main layout -->
+  <div id="cart-layout" class="flex flex-col lg:flex-row gap-16">
+
+    <!-- ── LEFT: Cart Items + Order History ── -->
+    <section class="lg:w-[70%]">
+
+      <!-- Cart items container -->
+      <div id="cart-items-wrap" class="space-y-8">
+        <!-- skeleton -->
+        <div id="cart-skeleton" class="space-y-8">
+          <div class="flex gap-6">
+            <div class="w-32 h-48 skeleton rounded-md"></div>
+            <div class="flex-1 space-y-3 py-1">
+              <div class="h-6 skeleton rounded w-1/2"></div>
+              <div class="h-4 skeleton rounded w-1/3"></div>
+              <div class="h-8 skeleton rounded w-1/4 mt-6"></div>
+            </div>
+          </div>
+          <div class="flex gap-6">
+            <div class="w-32 h-48 skeleton rounded-md"></div>
+            <div class="flex-1 space-y-3 py-1">
+              <div class="h-6 skeleton rounded w-2/3"></div>
+              <div class="h-4 skeleton rounded w-1/3"></div>
+              <div class="h-8 skeleton rounded w-1/4 mt-6"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty cart state -->
+      <div id="empty-cart" class="hidden text-center py-16 px-8 rounded-2xl bg-surface-container-low/30 border border-outline-variant/10 max-w-md mx-auto mt-8">
+        <div class="w-20 h-20 bg-surface-container rounded-full flex items-center justify-center mx-auto mb-6">
+          <span class="material-symbols-outlined text-4xl text-outline/40">auto_stories</span>
+        </div>
+        <h2 class="font-newsreader text-3xl text-primary mb-4">Your shelf is empty.</h2>
+        <p class="font-manrope text-on-surface-variant text-sm mb-8 leading-relaxed">
+          Let our AI curate a selection based on your reading preferences.
+        </p>
+        <a href="/"
+           class="bg-secondary px-8 py-3 text-on-secondary font-label text-xs font-bold uppercase tracking-widest rounded-full hover:shadow-lg transition-all active:scale-95 inline-block">
+          Browse Books
+        </a>
+      </div>
+
+      <!-- ── ORDER HISTORY ── -->
+      <section id="order-history-section" class="mt-24 hidden">
+        <h2 class="font-newsreader text-3xl text-primary mb-8">Previous Acquisitions</h2>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="border-b border-surface-container-high">
+                <th class="py-4 font-manrope text-xs uppercase tracking-widest text-outline">Order ID</th>
+                <th class="py-4 font-manrope text-xs uppercase tracking-widest text-outline">Date</th>
+                <th class="py-4 font-manrope text-xs uppercase tracking-widest text-outline">Items</th>
+                <th class="py-4 font-manrope text-xs uppercase tracking-widest text-outline text-right">Total</th>
+                <th class="py-4 font-manrope text-xs uppercase tracking-widest text-outline text-right">Status</th>
+              </tr>
+            </thead>
+            <tbody id="order-history-body" class="divide-y divide-surface-container/30"></tbody>
+          </table>
+        </div>
+      </section>
+
+    </section>
+
+    <!-- ── RIGHT: Order Summary ── -->
+    <aside class="lg:w-[30%]">
+      <div class="bg-surface-container p-8 sticky top-28 rounded-lg space-y-6">
+
+        <h2 class="font-newsreader text-2xl text-primary">Summary</h2>
+
+        <!-- Line items -->
+        <div class="space-y-3">
+          <div class="flex justify-between text-sm text-on-surface-variant font-manrope">
+            <span id="summary-items-label">Items (0)</span>
+            <span id="summary-subtotal" class="text-primary font-medium">₹0</span>
+          </div>
+          <div class="flex justify-between text-sm text-on-surface-variant font-manrope">
+            <span>Shipping</span>
+            <span id="summary-shipping" class="text-secondary font-medium italic">Complimentary</span>
+          </div>
+          <div id="discount-row" class="hidden flex justify-between text-sm text-on-surface-variant font-manrope">
+            <span>Discount (<span id="coupon-label-text"></span>)</span>
+            <span id="summary-discount" class="text-error font-medium"></span>
+          </div>
+          <div class="pt-4 border-t border-outline-variant/20 flex justify-between items-end">
+            <span class="font-newsreader text-xl text-primary">Total</span>
+            <span id="summary-total" class="font-newsreader text-3xl text-primary font-bold">₹0</span>
+          </div>
+        </div>
+
+        <!-- Coupon -->
+        <div>
+          <label class="block text-xs font-label uppercase tracking-widest text-outline mb-2">Discount Code</label>
+          <div class="flex gap-2">
+            <input id="coupon-input"
+                   class="flex-1 bg-surface-container-lowest border border-outline-variant/20 text-sm p-3 focus:ring-1 focus:ring-secondary/50 rounded-md outline-none font-manrope transition-all"
+                   placeholder="e.g. SHELF20"
+                   type="text"
+                   autocomplete="off"/>
+            <button id="coupon-btn"
+                    onclick="applyCoupon()"
+                    class="bg-primary-container text-on-primary-container px-4 py-2 text-xs font-bold rounded-md hover:bg-primary hover:text-on-primary transition-colors">
+              Apply
+            </button>
+          </div>
+          <p id="coupon-msg" class="hidden text-xs font-label mt-2 ml-1"></p>
+          <!-- Available codes hint -->
+          <div class="mt-3 text-[10px] text-on-surface-variant/50 font-label space-y-0.5">
+            <p class="font-bold uppercase tracking-widest text-[9px] mb-1">Try these codes:</p>
+            <p>WELCOME15 · SHELF10 · SHELF20 · INDIA25</p>
+          </div>
+        </div>
+
+        <!-- Delivery address -->
+        <div id="address-section">
+          <label class="block text-xs font-label uppercase tracking-widest text-outline mb-2">Delivery Address</label>
+          <textarea id="delivery-address"
+                    class="shelf-input resize-none"
+                    rows="3"
+                    placeholder="Flat No, Street, City, State, PIN Code"></textarea>
+          <p id="address-err" class="hidden text-xs text-error font-label mt-1 ml-1"></p>
+        </div>
+
+        <!-- Place Order -->
+        <button id="place-order-btn"
+                onclick="placeOrder()"
+                class="w-full bg-secondary text-on-secondary py-4 font-label font-bold text-sm tracking-widest uppercase rounded-lg hover:opacity-90 transition-all shadow-md active:scale-[0.98] flex items-center justify-center gap-2">
+          <span id="place-order-text">Place Order</span>
+        </button>
+
+        <div class="flex items-center justify-center gap-2 text-outline">
+          <span class="material-symbols-outlined text-sm">lock</span>
+          <span class="text-[10px] font-manrope uppercase tracking-widest">Secure · 100% Indian Payment</span>
+        </div>
+
+      </div>
+    </aside>
+
+  </div><!-- /cart-layout -->
+
+  <!-- ── ORDER SUCCESS MODAL ── -->
+  <div id="order-modal"
+       class="hidden fixed inset-0 z-50 flex items-center justify-center bg-primary/40 backdrop-blur-sm px-6">
+    <div class="bg-surface-container-lowest rounded-2xl p-12 max-w-md w-full text-center shadow-2xl border border-outline-variant/10 relative">
+      <div class="w-20 h-20 bg-secondary-container rounded-full flex items-center justify-center mx-auto mb-6">
+        <span class="material-symbols-outlined text-4xl text-secondary" style="font-variation-settings:'FILL' 1">check_circle</span>
+      </div>
+      <h2 class="font-newsreader text-3xl text-primary font-bold mb-2">Order Placed!</h2>
+      <p class="text-on-surface-variant text-sm font-manrope mb-2">Your books are on their way.</p>
+      <p id="order-modal-id" class="text-primary font-label font-bold text-sm mb-1"></p>
+      <p id="order-modal-total" class="text-secondary font-newsreader text-2xl font-bold mb-8"></p>
+      <div class="flex gap-4 justify-center">
+        <button onclick="closeModal()"
+                class="border border-primary/20 text-primary px-8 py-3 rounded-md font-label font-bold text-sm hover:bg-surface-container transition-colors">
+          Continue Shopping
+        </button>
+        <button onclick="closeModal(); scrollToHistory();"
+                class="bg-primary text-on-primary px-8 py-3 rounded-md font-label font-bold text-sm hover:bg-primary-container transition-colors">
+          View Orders
+        </button>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ════════════════════════════════════════════
+     FOOTER
+═════════════════════════════════════════════ -->
+<footer class="bg-[#f2ede5] w-full py-12 px-8">
+  <div class="flex flex-col md:flex-row justify-between items-center gap-6 max-w-7xl mx-auto">
+    <div>
+      <a href="/" class="font-newsreader text-xl italic text-[#041534]">Shelf</a>
+      <p class="font-manrope text-xs tracking-widest uppercase text-[#041534]/50 mt-2">
+        © 2025 Shelf Digital Bibliophile. Curated by AI.
+      </p>
+    </div>
+    <div class="flex gap-8 font-manrope text-xs tracking-widest uppercase text-[#1d1c17]/50">
+      <a class="hover:text-[#041534] transition-opacity" href="#">Terms of Service</a>
+      <a class="hover:text-[#041534] transition-opacity" href="#">Privacy Policy</a>
+      <a class="hover:text-[#041534] transition-opacity" href="#">Shipping &amp; Returns</a>
+      <a class="hover:text-[#041534] transition-opacity" href="#">Contact</a>
+    </div>
+  </div>
+</footer>
+
+<!-- Toast -->
+<div id="toast"
+     class="fixed bottom-6 right-6 z-50 bg-primary text-on-primary px-6 py-4 rounded-xl shadow-2xl font-label font-bold text-sm flex items-center gap-3 opacity-0"
+     style="transform: translateY(2rem);">
+  <span id="toast-icon" class="material-symbols-outlined text-base"></span>
+  <span id="toast-msg"></span>
+</div>
+
+<!-- ════════════════════════════════════════════
+     JAVASCRIPT
+═════════════════════════════════════════════ -->
+<script>
+// ──────────────────────────────────────────────
+//  State
+// ──────────────────────────────────────────────
+const TOKEN = () => localStorage.getItem('shelf_token');
+
+const FALLBACK_COVERS = [
+  'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=200&q=80',
+  'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=200&q=80',
+  'https://images.unsplash.com/photo-1495640388908-05fa85288e61?w=200&q=80',
+  'https://images.unsplash.com/photo-1519682337058-a94d519337bc?w=200&q=80',
+];
+
+let cartState = {
+  items: [],
+  subtotal: 0,
+  discountAmt: 0,
+  discountPct: 0,
+  couponCode: null,
+  total: 0
+};
+
+// ──────────────────────────────────────────────
+//  Utilities
+// ──────────────────────────────────────────────
+function formatINR(n) {
+  return '₹' + parseFloat(n).toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+}
+
+function escHtml(s) {
+  return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function coverSrc(url, idx) {
+  if (url && url.startsWith('http')) return url;
+  return FALLBACK_COVERS[idx % FALLBACK_COVERS.length];
+}
+
+async function apiFetch(path, opts = {}) {
+  const headers = { 'Content-Type': 'application/json', ...(opts.headers || {}) };
+  if (TOKEN()) headers['Authorization'] = `Bearer ${TOKEN()}`;
+  const res = await fetch(path, { ...opts, headers });
+  return res.json();
+}
+
+function showToast(msg, type = 'success') {
+  const toast = document.getElementById('toast');
+  document.getElementById('toast-icon').textContent = type === 'success' ? 'check_circle' : 'error';
+  document.getElementById('toast-msg').textContent  = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+function statusBadge(status) {
+  const map = {
+    'Pending':    'badge-pending',
+    'Processing': 'badge-processing',
+    'Shipped':    'badge-shipped',
+    'Delivered':  'badge-delivered',
+    'Cancelled':  'badge-cancelled',
+  };
+  const cls = map[status] || 'badge-pending';
+  return `<span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold font-label ${cls}">${status}</span>`;
+}
+
+function formatDate(isoStr) {
+  if (!isoStr) return '—';
+  return new Date(isoStr).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+// ──────────────────────────────────────────────
+//  Auth check & nav
+// ──────────────────────────────────────────────
+async function initAuth() {
+  if (!TOKEN()) {
+    document.getElementById('cart-layout').classList.add('hidden');
+    document.getElementById('login-prompt').classList.remove('hidden');
+    document.getElementById('cart-subtitle').textContent = 'Sign in to manage your selections.';
+    return false;
+  }
+
+  const data = await apiFetch('/api/auth/me');
+  if (data.status !== 'ok') {
+    localStorage.removeItem('shelf_token');
+    window.location.href = '/auth?redirect=/cart';
+    return false;
+  }
+
+  const user = data.data;
+  document.getElementById('auth-area').innerHTML = `
+    <div class="flex items-center gap-3">
+      <span class="text-sm font-label font-bold text-primary hidden md:block">
+        Hi, ${escHtml(user.name.split(' ')[0])}
+      </span>
+      <button onclick="logout()"
+        class="border border-primary/20 text-primary px-4 py-2 rounded-sm font-label text-xs font-bold hover:bg-primary hover:text-on-primary transition-colors">
+        Logout
+      </button>
+    </div>`;
+  return true;
+}
+
+function logout() {
+  localStorage.removeItem('shelf_token');
+  window.location.href = '/auth';
+}
+
+// ──────────────────────────────────────────────
+//  Load Cart
+// ──────────────────────────────────────────────
+async function loadCart() {
+  const data = await apiFetch('/api/cart');
+  document.getElementById('cart-skeleton').remove();
+
+  if (data.status !== 'ok') {
+    showToast('Could not load cart.', 'error');
+    return;
+  }
+
+  cartState.items    = data.data.items || [];
+  cartState.subtotal = parseFloat(data.data.subtotal || 0);
+
+  updateCartBadge(cartState.items.length);
+  recalcTotals();
+  renderCartItems();
+  updateSummaryUI();
+
+  const subtitle = document.getElementById('cart-subtitle');
+  subtitle.textContent = cartState.items.length > 0
+    ? `Reviewing ${cartState.items.length} selection${cartState.items.length !== 1 ? 's' : ''} for your physical library`
+    : 'Your shelf is currently empty';
+}
+
+function updateCartBadge(n) {
+  const badge = document.getElementById('cart-badge');
+  badge.textContent = n > 9 ? '9+' : n;
+  if (n > 0) {
+    badge.classList.remove('hidden');
+    badge.classList.add('badge-pop');
+    setTimeout(() => badge.classList.remove('badge-pop'), 300);
+  } else {
+    badge.classList.add('hidden');
+  }
+}
+
+// ──────────────────────────────────────────────
+//  Render cart items
+// ──────────────────────────────────────────────
+function renderCartItems() {
+  const wrap  = document.getElementById('cart-items-wrap');
+  const empty = document.getElementById('empty-cart');
+
+  // Remove all existing cart-item divs
+  wrap.querySelectorAll('.cart-item').forEach(el => el.remove());
+
+  if (cartState.items.length === 0) {
+    empty.classList.remove('hidden');
+    document.getElementById('place-order-btn').disabled = true;
+    document.getElementById('place-order-btn').classList.add('opacity-50', 'cursor-not-allowed');
+    return;
+  }
+
+  empty.classList.add('hidden');
+  document.getElementById('place-order-btn').disabled = false;
+  document.getElementById('place-order-btn').classList.remove('opacity-50', 'cursor-not-allowed');
+
+  cartState.items.forEach((item, i) => {
+    const div = document.createElement('div');
+    div.className = 'cart-item flex flex-col sm:flex-row gap-6 group';
+    div.dataset.bookId = item.book_id;
+
+    const itemSubtotal = parseFloat(item.price) * parseInt(item.quantity);
+
+    div.innerHTML = `
+      <div class="w-full sm:w-32 h-48 bg-surface-container overflow-hidden rounded-md shadow-sm flex-shrink-0">
+        <a href="/book/${item.book_id}">
+          <img src="${coverSrc(item.cover_url, i)}"
+               alt="${escHtml(item.title)}"
+               class="w-full h-full object-cover grayscale-[0.2] hover:grayscale-0 transition-all duration-500"
+               onerror="this.style.display='none'"/>
+        </a>
+      </div>
+      <div class="flex-1 flex flex-col justify-between py-1">
+        <div>
+          <div class="flex justify-between items-start">
+            <a href="/book/${item.book_id}">
+              <h3 class="font-newsreader text-2xl text-primary font-medium hover:text-secondary transition-colors">
+                ${escHtml(item.title)}
+              </h3>
+            </a>
+            <button onclick="removeItem(${item.book_id})"
+                    class="text-outline hover:text-error transition-colors ml-4 shrink-0">
+              <span class="material-symbols-outlined">delete</span>
+            </button>
+          </div>
+          <p class="font-manrope text-sm text-on-surface-variant mt-1">${escHtml(item.author || '')}</p>
+          <p class="font-manrope text-xs text-on-surface-variant/60 mt-1">${formatINR(item.price)} each</p>
+          ${item.stock <= 5 && item.stock > 0
+            ? `<p class="text-xs text-secondary font-label font-bold mt-1">⚠ Only ${item.stock} left in stock</p>`
+            : item.stock === 0
+            ? `<p class="text-xs text-error font-label font-bold mt-1">Out of stock</p>`
+            : ''}
+        </div>
+        <div class="flex justify-between items-end mt-4">
+          <!-- Qty stepper -->
+          <div class="flex items-center bg-surface-container-low px-2 py-1 rounded-md border border-outline-variant/15">
+            <button class="qty-btn p-1" onclick="changeQty(${item.book_id}, ${item.quantity - 1})">
+              <span class="material-symbols-outlined text-sm">remove</span>
+            </button>
+            <span class="px-4 font-manrope font-semibold text-primary qty-display" data-id="${item.book_id}">
+              ${item.quantity}
+            </span>
+            <button class="qty-btn p-1" onclick="changeQty(${item.book_id}, ${item.quantity + 1}, ${item.stock})">
+              <span class="material-symbols-outlined text-sm">add</span>
+            </button>
+          </div>
+          <!-- Item subtotal -->
+          <div class="text-right">
+            <p class="text-xs text-outline font-label uppercase tracking-tighter mb-1">Subtotal</p>
+            <p class="font-newsreader text-xl font-semibold text-primary item-subtotal" data-id="${item.book_id}">
+              ${formatINR(itemSubtotal)}
+            </p>
+          </div>
+        </div>
+      </div>
+    `;
+    wrap.appendChild(div);
+  });
+}
+
+// ──────────────────────────────────────────────
+//  Cart actions
+// ──────────────────────────────────────────────
+async function changeQty(bookId, newQty, maxStock) {
+  if (newQty < 0) return;
+  if (maxStock !== undefined && newQty > maxStock) {
+    showToast(`Only ${maxStock} copies available.`, 'error');
+    return;
+  }
+
+  const data = await apiFetch('/api/cart/update', {
+    method: 'PUT',
+    body: JSON.stringify({ book_id: bookId, quantity: newQty })
+  });
+
+  if (data.status === 'ok') {
+    await reloadCart();
+  } else {
+    showToast(data.message || 'Could not update cart.', 'error');
+  }
+}
+
+async function removeItem(bookId) {
+  // Animate out
+  const el = document.querySelector(`.cart-item[data-book-id="${bookId}"]`);
+  if (el) {
+    el.classList.add('removing');
+    await new Promise(r => setTimeout(r, 300));
+  }
+
+  const data = await apiFetch(`/api/cart/remove/${bookId}`, { method: 'DELETE' });
+  if (data.status === 'ok') {
+    showToast('Removed from cart.');
+    await reloadCart();
+  } else {
+    showToast(data.message || 'Could not remove item.', 'error');
+    if (el) el.classList.remove('removing');
+  }
+}
+
+async function reloadCart() {
+  // Reset coupon state on reload
+  const prevCoupon = cartState.couponCode;
+  const prevPct    = cartState.discountPct;
+
+  const data = await apiFetch('/api/cart');
+  if (data.status !== 'ok') return;
+
+  cartState.items    = data.data.items || [];
+  cartState.subtotal = parseFloat(data.data.subtotal || 0);
+  cartState.couponCode = prevCoupon;
+  cartState.discountPct = prevPct;
+
+  recalcTotals();
+  updateCartBadge(cartState.items.length);
+  renderCartItems();
+  updateSummaryUI();
+
+  const subtitle = document.getElementById('cart-subtitle');
+  subtitle.textContent = cartState.items.length > 0
+    ? `Reviewing ${cartState.items.length} selection${cartState.items.length !== 1 ? 's' : ''} for your physical library`
+    : 'Your shelf is currently empty';
+}
+
+// ──────────────────────────────────────────────
+//  Coupon
+// ──────────────────────────────────────────────
+async function applyCoupon() {
+  const code = document.getElementById('coupon-input').value.trim().toUpperCase();
+  const msg  = document.getElementById('coupon-msg');
+
+  if (!code) {
+    showCouponMsg('Please enter a coupon code.', false);
+    return;
+  }
+
+  const btn = document.getElementById('coupon-btn');
+  btn.disabled = true;
+  btn.textContent = '…';
+
+  const data = await apiFetch('/api/coupons/apply', {
+    method: 'POST',
+    body: JSON.stringify({ code, cart_total: cartState.subtotal })
+  });
+
+  btn.disabled    = false;
+  btn.textContent = 'Apply';
+
+  if (data.status === 'ok') {
+    cartState.couponCode  = data.data.code;
+    cartState.discountPct = data.data.discount_pct;
+    cartState.discountAmt = parseFloat(data.data.discount_amt);
+
+    recalcTotals();
+    updateSummaryUI();
+
+    document.getElementById('coupon-input').classList.add('coupon-applied');
+    showCouponMsg(`✓ ${data.data.discount_pct}% off applied — you save ${formatINR(data.data.discount_amt)}!`, true);
+    showToast(`Coupon ${code} applied! ${data.data.discount_pct}% off.`);
+  } else {
+    cartState.couponCode  = null;
+    cartState.discountPct = 0;
+    cartState.discountAmt = 0;
+    recalcTotals();
+    updateSummaryUI();
+    document.getElementById('coupon-input').classList.remove('coupon-applied');
+    showCouponMsg(data.message || 'Invalid or expired coupon.', false);
+  }
+}
+
+function showCouponMsg(text, success) {
+  const el = document.getElementById('coupon-msg');
+  el.textContent  = text;
+  el.className    = `text-xs font-label mt-2 ml-1 ${success ? 'text-secondary font-bold' : 'text-error'}`;
+  el.classList.remove('hidden');
+}
+
+// ──────────────────────────────────────────────
+//  Summary calculations
+// ──────────────────────────────────────────────
+function recalcTotals() {
+  cartState.subtotal   = cartState.items.reduce((s, i) => s + parseFloat(i.price) * i.quantity, 0);
+  cartState.discountAmt = cartState.discountPct > 0
+    ? parseFloat((cartState.subtotal * cartState.discountPct / 100).toFixed(2))
+    : 0;
+  cartState.total = parseFloat((cartState.subtotal - cartState.discountAmt).toFixed(2));
+}
+
+function updateSummaryUI() {
+  const count = cartState.items.reduce((s, i) => s + i.quantity, 0);
+
+  document.getElementById('summary-items-label').textContent = `Items (${count})`;
+  document.getElementById('summary-subtotal').textContent    = formatINR(cartState.subtotal);
+  document.getElementById('summary-total').textContent       = formatINR(cartState.total);
+
+  const discRow = document.getElementById('discount-row');
+  if (cartState.discountAmt > 0) {
+    discRow.classList.remove('hidden');
+    discRow.style.display = 'flex';
+    document.getElementById('coupon-label-text').textContent = cartState.couponCode || '';
+    document.getElementById('summary-discount').textContent  = `−${formatINR(cartState.discountAmt)}`;
+  } else {
+    discRow.classList.add('hidden');
+  }
+
+  // Free shipping for orders above ₹499
+  const shippingEl = document.getElementById('summary-shipping');
+  if (cartState.subtotal > 0 && cartState.subtotal < 499) {
+    shippingEl.textContent  = formatINR(49);
+    shippingEl.className    = 'text-primary font-medium';
+    cartState.total += 49;
+    document.getElementById('summary-total').textContent = formatINR(cartState.total);
+  } else {
+    shippingEl.textContent = 'Complimentary';
+    shippingEl.className   = 'text-secondary font-medium italic';
+  }
+}
+
+// ──────────────────────────────────────────────
+//  Place Order
+// ──────────────────────────────────────────────
+async function placeOrder() {
+  const address = document.getElementById('delivery-address').value.trim();
+  const addrErr = document.getElementById('address-err');
+  addrErr.classList.add('hidden');
+
+  if (!address || address.length < 10) {
+    addrErr.textContent = 'Please enter a complete delivery address (min. 10 characters).';
+    addrErr.classList.remove('hidden');
+    document.getElementById('delivery-address').focus();
+    return;
+  }
+
+  if (cartState.items.length === 0) {
+    showToast('Your cart is empty!', 'error');
+    return;
+  }
+
+  const btn  = document.getElementById('place-order-btn');
+  const text = document.getElementById('place-order-text');
+  btn.disabled    = true;
+  text.innerHTML  = `<span class="material-symbols-outlined text-sm spin">progress_activity</span> Placing Order…`;
+
+  const data = await apiFetch('/api/orders/place', {
+    method: 'POST',
+    body: JSON.stringify({
+      address,
+      coupon_code: cartState.couponCode || null
+    })
+  });
+
+  btn.disabled   = false;
+  text.textContent = 'Place Order';
+
+  if (data.status === 'ok') {
+    const { order_id, total_amount } = data.data;
+
+    // Show success modal
+    document.getElementById('order-modal-id').textContent    = `Order #SH-${order_id}`;
+    document.getElementById('order-modal-total').textContent = formatINR(total_amount);
+    document.getElementById('order-modal').classList.remove('hidden');
+
+    // Reset coupon
+    cartState.couponCode  = null;
+    cartState.discountPct = 0;
+    cartState.discountAmt = 0;
+    document.getElementById('coupon-input').value = '';
+    document.getElementById('coupon-input').classList.remove('coupon-applied');
+    document.getElementById('coupon-msg').classList.add('hidden');
+    document.getElementById('delivery-address').value = '';
+
+    await reloadCart();
+    await loadOrderHistory();
+  } else {
+    showToast(data.message || 'Order failed. Please try again.', 'error');
+  }
+}
+
+function closeModal() {
+  document.getElementById('order-modal').classList.add('hidden');
+}
+
+function scrollToHistory() {
+  const el = document.getElementById('order-history-section');
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ──────────────────────────────────────────────
+//  Order History
+// ──────────────────────────────────────────────
+async function loadOrderHistory() {
+  const data = await apiFetch('/api/orders/history');
+  if (data.status !== 'ok') return;
+
+  const orders  = data.data || [];
+  const section = document.getElementById('order-history-section');
+  const tbody   = document.getElementById('order-history-body');
+
+  if (orders.length === 0) {
+    section.classList.add('hidden');
+    return;
+  }
+
+  section.classList.remove('hidden');
+  tbody.innerHTML = '';
+
+  orders.forEach(order => {
+    const itemCount = (order.items || []).length;
+    const titles    = (order.items || []).map(i => i.title).join(', ');
+
+    const tr = document.createElement('tr');
+    tr.className = 'hover:bg-surface-container-low transition-colors duration-200';
+    tr.innerHTML = `
+      <td class="py-5 font-manrope text-sm font-medium text-primary">#SH-${order.order_id}</td>
+      <td class="py-5 font-manrope text-sm text-on-surface-variant">${formatDate(order.created_at)}</td>
+      <td class="py-5 font-manrope text-sm text-on-surface-variant">
+        <span title="${escHtml(titles)}">${itemCount} book${itemCount !== 1 ? 's' : ''}</span>
+      </td>
+      <td class="py-5 font-manrope text-sm text-primary font-bold text-right">
+        ${formatINR(order.total_amount)}
+        ${order.discount_amt > 0
+          ? `<span class="block text-[10px] text-secondary font-normal">Saved ${formatINR(order.discount_amt)}</span>`
+          : ''}
+      </td>
+      <td class="py-5 text-right">${statusBadge(order.status)}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// ──────────────────────────────────────────────
+//  Enter key on coupon input
+// ──────────────────────────────────────────────
+document.getElementById('coupon-input').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') applyCoupon();
+});
+
+// ──────────────────────────────────────────────
+//  INIT
+// ──────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+  const authed = await initAuth();
+  if (!authed) return;
+
+  await loadCart();
+  await loadOrderHistory();
+});
+</script>
+
+</body>
+</html>

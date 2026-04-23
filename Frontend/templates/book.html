@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Book Details | Shelf Digital Sanctuary</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&family=Manrope:wght@200..800&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#041534",
+            "on-surface": "#1d1c17",
+            "on-secondary-fixed-variant": "#584400",
+            "on-primary-container": "#8392b7",
+            "surface-container-lowest": "#ffffff",
+            "error-container": "#ffdad6",
+            "surface-tint": "#4f5e81",
+            "on-tertiary-fixed-variant": "#544520",
+            "on-error-container": "#93000a",
+            "error": "#ba1a1a",
+            "surface-container-highest": "#e7e2da",
+            "surface-container-high": "#ece8e0",
+            "outline": "#75777f",
+            "on-secondary-fixed": "#241a00",
+            "surface-variant": "#e7e2da",
+            "background": "#fef9f1",
+            "secondary-fixed": "#ffe08f",
+            "secondary-container": "#fed977",
+            "surface-container": "#f2ede5",
+            "on-tertiary-container": "#a49064",
+            "on-primary-fixed-variant": "#384668",
+            "on-tertiary-fixed": "#251a00",
+            "inverse-surface": "#32302b",
+            "tertiary": "#1f1500",
+            "outline-variant": "#c5c6cf",
+            "inverse-on-surface": "#f5f0e8",
+            "inverse-primary": "#b7c6ee",
+            "secondary": "#755b00",
+            "tertiary-fixed": "#f8e0ae",
+            "secondary-fixed-dim": "#e6c364",
+            "primary-fixed-dim": "#b7c6ee",
+            "primary-container": "#1b2a4a",
+            "on-primary-fixed": "#0a1a3a",
+            "on-primary": "#ffffff",
+            "on-secondary-container": "#785d00",
+            "on-background": "#1d1c17",
+            "on-secondary": "#ffffff",
+            "surface-bright": "#fef9f1",
+            "tertiary-container": "#362906",
+            "on-error": "#ffffff",
+            "surface-dim": "#ded9d2",
+            "on-tertiary": "#ffffff",
+            "surface-container-low": "#f8f3eb",
+            "primary-fixed": "#d9e2ff",
+            "surface": "#fef9f1",
+            "on-surface-variant": "#45464e",
+            "tertiary-fixed-dim": "#dbc494"
+          },
+          fontFamily: {
+            "headline": ["Newsreader", "serif"],
+            "body": ["Manrope", "sans-serif"],
+            "label": ["Manrope", "sans-serif"]
+          },
+          borderRadius: { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }
+        }
+      }
+    }
+  </script>
+  <style>
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    body  { font-family: 'Manrope', sans-serif; }
+    h1, h2, h3, .font-serif { font-family: 'Newsreader', serif; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* skeleton */
+    .skeleton { background: linear-gradient(90deg,#f2ede5 25%,#ece8e0 50%,#f2ede5 75%); background-size:200% 100%; animation: shimmer 1.5s infinite; }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+    /* toast */
+    #toast { transition: all 0.35s cubic-bezier(0.34,1.56,0.64,1); }
+    #toast.show { transform: translateY(0) !important; opacity: 1 !important; }
+
+    /* star rating interactive */
+    .star-btn { cursor:pointer; transition: transform 0.15s ease; }
+    .star-btn:hover { transform: scale(1.2); }
+    .star-btn.filled { font-variation-settings:'FILL' 1; color:#755b00; }
+
+    /* cover fallback */
+    .cover-wrap { background: linear-gradient(135deg,#1b2a4a 0%,#041534 60%,#4f5e81 100%); }
+
+    /* similar card hover cart btn */
+    .sim-cart-btn { transform: translateY(3rem); }
+    .group:hover .sim-cart-btn { transform: translateY(0); }
+
+    /* wishlist active */
+    .wish-active .wish-icon { font-variation-settings:'FILL' 1; color:#ba1a1a; }
+
+    @keyframes badgePop { 0%,100%{transform:scale(1)} 50%{transform:scale(1.4)} }
+    .badge-pop { animation: badgePop 0.3s ease; }
+  </style>
+</head>
+
+<body class="bg-background text-on-background selection:bg-secondary-fixed selection:text-on-secondary-fixed">
+
+<!-- ═══════════════════════════════════════════════
+     NAV
+════════════════════════════════════════════════ -->
+<nav class="w-full top-0 sticky z-50 bg-[#fef9f1] border-b border-outline-variant/10">
+  <div class="flex justify-between items-center px-8 py-5 max-w-screen-2xl mx-auto">
+
+    <a href="/" class="text-2xl font-serif font-black text-[#041534] tracking-tight">Shelf</a>
+
+    <div class="hidden md:flex items-center space-x-8">
+      <a href="/" class="text-[#1d1c17]/70 font-label uppercase tracking-widest text-xs hover:text-primary transition-colors">Home</a>
+      <a href="/?browse=all" class="text-[#041534] border-b-2 border-[#1B2A4A] pb-1 font-label uppercase tracking-widest text-xs">Browse</a>
+      <a href="/cart" class="text-[#1d1c17]/70 font-label uppercase tracking-widest text-xs hover:text-primary transition-colors">Wishlist</a>
+    </div>
+
+    <div class="flex items-center space-x-5">
+      <!-- Inline search -->
+      <div class="relative hidden lg:block">
+        <input id="nav-search"
+               class="bg-surface-container-lowest border-none ring-1 ring-outline-variant/15 text-sm py-2 px-4 pr-10 w-64 focus:ring-secondary/50 outline-none rounded-sm"
+               placeholder="Search the sanctuary..."
+               type="text"/>
+        <span class="material-symbols-outlined absolute right-3 top-2 text-on-surface/50 text-base">search</span>
+      </div>
+
+      <!-- Cart -->
+      <a href="/cart" class="relative scale-95 active:scale-90 transition-transform">
+        <span class="material-symbols-outlined text-primary">shopping_cart</span>
+        <span id="cart-badge"
+              class="absolute -top-2 -right-2 bg-secondary text-on-secondary text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold hidden">
+          0
+        </span>
+      </a>
+
+      <div id="auth-area">
+        <a href="/auth" class="bg-primary text-on-primary px-6 py-2 font-label text-sm font-bold scale-95 active:scale-90 transition-transform rounded-sm">
+          Login
+        </a>
+      </div>
+    </div>
+
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════════
+     MAIN
+════════════════════════════════════════════════ -->
+<main class="max-w-screen-2xl mx-auto px-8">
+
+  <!-- Loading skeleton for hero -->
+  <div id="hero-skeleton" class="grid grid-cols-1 md:grid-cols-12 gap-16 py-16 md:py-24 items-center">
+    <div class="md:col-span-5 flex justify-center">
+      <div class="w-full max-w-[400px] aspect-[2/3] skeleton rounded-sm"></div>
+    </div>
+    <div class="md:col-span-7 space-y-4">
+      <div class="h-4 skeleton rounded w-32"></div>
+      <div class="h-16 skeleton rounded w-3/4"></div>
+      <div class="h-5 skeleton rounded w-48"></div>
+      <div class="h-32 skeleton rounded w-full mt-8"></div>
+      <div class="flex gap-4 mt-8">
+        <div class="h-14 skeleton rounded w-48"></div>
+        <div class="h-14 skeleton rounded w-48"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── HERO SECTION (populated by JS) ── -->
+  <section id="hero-section" class="hidden grid grid-cols-1 md:grid-cols-12 gap-16 py-16 md:py-24 items-center">
+
+    <!-- Cover -->
+    <div class="md:col-span-5 flex justify-center md:justify-end">
+      <div class="relative group">
+        <div class="absolute -inset-4 bg-surface-container-high/30 blur-2xl group-hover:bg-secondary-fixed/20 transition-all duration-700 -z-10"></div>
+        <div class="cover-wrap w-full max-w-[400px] rounded-sm overflow-hidden shadow-[20px_20px_60px_-15px_rgba(4,21,52,0.3)] border-l-4 border-primary/10">
+          <img id="book-cover"
+               src=""
+               alt=""
+               class="w-full object-cover"
+               onerror="this.style.display='none'"/>
+        </div>
+      </div>
+    </div>
+
+    <!-- Details -->
+    <div class="md:col-span-7 flex flex-col items-start">
+
+      <!-- Stock badge + stars -->
+      <div class="flex flex-wrap items-center gap-3 mb-6">
+        <span id="stock-badge" class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest"></span>
+        <div id="star-display" class="flex items-center text-secondary"></div>
+        <span id="rating-count" class="text-on-surface-variant font-label text-xs"></span>
+      </div>
+
+      <h1 id="book-title" class="text-6xl md:text-7xl font-serif font-black text-primary leading-tight mb-2"></h1>
+      <p id="book-author-line" class="text-xl font-serif italic text-on-surface/70 mb-8"></p>
+
+      <!-- Metadata grid -->
+      <div class="grid grid-cols-2 gap-x-12 gap-y-4 mb-10 text-sm border-y border-outline-variant/15 py-8 w-full max-w-lg">
+        <div class="flex flex-col">
+          <span class="text-on-surface-variant uppercase tracking-widest text-[10px] font-bold mb-1">Price</span>
+          <span id="book-price" class="text-2xl font-serif font-bold text-primary"></span>
+        </div>
+        <div class="flex flex-col">
+          <span class="text-on-surface-variant uppercase tracking-widest text-[10px] font-bold mb-1">Language</span>
+          <span id="book-language" class="font-medium"></span>
+        </div>
+        <div class="flex flex-col">
+          <span class="text-on-surface-variant uppercase tracking-widest text-[10px] font-bold mb-1">ISBN</span>
+          <span id="book-isbn" class="font-medium"></span>
+        </div>
+        <div class="flex flex-col">
+          <span class="text-on-surface-variant uppercase tracking-widest text-[10px] font-bold mb-1">Published</span>
+          <span id="book-year" class="font-medium"></span>
+        </div>
+        <div class="flex flex-col">
+          <span class="text-on-surface-variant uppercase tracking-widest text-[10px] font-bold mb-1">Pages</span>
+          <span id="book-pages" class="font-medium"></span>
+        </div>
+        <div class="flex flex-col">
+          <span class="text-on-surface-variant uppercase tracking-widest text-[10px] font-bold mb-1">Stock</span>
+          <span id="book-stock-count" class="font-medium"></span>
+        </div>
+      </div>
+
+      <!-- CTA Buttons -->
+      <div class="flex flex-wrap gap-4">
+        <button id="add-cart-btn"
+                class="bg-gradient-to-br from-primary to-primary-container text-on-primary px-10 py-4 rounded-md font-bold text-sm tracking-wide shadow-lg shadow-primary/20 flex items-center gap-2 hover:scale-[1.02] active:scale-95 transition-all">
+          <span class="material-symbols-outlined text-sm">shopping_bag</span>
+          Add to Cart
+        </button>
+        <button id="add-wish-btn"
+                class="border border-primary/20 text-primary px-10 py-4 rounded-md font-bold text-sm tracking-wide hover:bg-surface-container transition-colors flex items-center gap-2">
+          <span class="material-symbols-outlined text-sm wish-icon">favorite</span>
+          Add to Wishlist
+        </button>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── SYNOPSIS ── -->
+  <section id="synopsis-section" class="hidden py-20 border-t border-outline-variant/15">
+    <div class="max-w-4xl">
+      <h2 class="text-3xl font-serif font-bold text-primary mb-8 tracking-tight">Synopsis</h2>
+      <div id="synopsis-text"
+           class="font-serif text-xl leading-relaxed text-on-surface-variant space-y-6">
+      </div>
+      <!-- Mood / category tags -->
+      <div id="tags-row" class="mt-12 flex flex-wrap gap-3"></div>
+    </div>
+  </section>
+
+  <!-- ── SIMILAR BOOKS ── -->
+  <section id="similar-section" class="hidden py-20">
+    <div class="flex justify-between items-end mb-12">
+      <div>
+        <h2 class="text-3xl font-serif font-bold text-primary tracking-tight">Readers also discovered</h2>
+        <p class="text-on-surface-variant text-sm mt-2">AI-powered recommendations based on this book's themes.</p>
+      </div>
+      <div class="flex gap-2">
+        <button id="sim-prev"
+                class="p-2 border border-outline-variant/20 hover:bg-surface-container transition-colors">
+          <span class="material-symbols-outlined">chevron_left</span>
+        </button>
+        <button id="sim-next"
+                class="p-2 border border-outline-variant/20 hover:bg-surface-container transition-colors">
+          <span class="material-symbols-outlined">chevron_right</span>
+        </button>
+      </div>
+    </div>
+
+    <div id="similar-scroll"
+         class="flex overflow-x-auto gap-8 no-scrollbar pb-8 scroll-smooth">
+    </div>
+  </section>
+
+  <!-- ── REVIEWS ── -->
+  <section class="py-20 bg-surface-container-low -mx-8 px-8 border-y border-outline-variant/15">
+    <div class="max-w-screen-xl mx-auto">
+
+      <div class="flex justify-between items-center mb-16">
+        <h2 class="text-3xl font-serif font-bold text-primary">Community Reviews</h2>
+        <span id="review-summary" class="text-sm font-medium text-on-surface-variant"></span>
+      </div>
+
+      <!-- Reviews grid -->
+      <div id="reviews-grid" class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-20">
+        <!-- populated by JS -->
+        <div class="col-span-2 text-center py-12 text-on-surface/40 font-label text-sm" id="reviews-empty">
+          No reviews yet. Be the first to share your thoughts!
+        </div>
+      </div>
+
+      <!-- Write a Review -->
+      <div class="max-w-2xl mx-auto bg-surface p-10 shadow-xl shadow-primary/5">
+        <h3 class="text-2xl font-serif font-bold text-primary mb-2 text-center">Share your thoughts</h3>
+        <p class="text-sm text-center text-on-surface-variant mb-8">
+          Your sanctuary reflections help others find their next journey.
+        </p>
+
+        <div id="review-login-msg" class="hidden text-center mb-6">
+          <a href="/auth" class="text-primary font-bold underline underline-offset-2 text-sm">Login</a>
+          <span class="text-sm text-on-surface-variant"> to post a review.</span>
+        </div>
+
+        <div id="review-form-wrap">
+          <!-- Star selector -->
+          <div class="flex flex-col items-center mb-6">
+            <p class="text-[10px] uppercase tracking-widest font-bold mb-3 text-on-surface-variant">Rating</p>
+            <div class="flex gap-2 text-secondary" id="star-selector">
+              <span class="material-symbols-outlined text-3xl star-btn" data-val="1">star</span>
+              <span class="material-symbols-outlined text-3xl star-btn" data-val="2">star</span>
+              <span class="material-symbols-outlined text-3xl star-btn" data-val="3">star</span>
+              <span class="material-symbols-outlined text-3xl star-btn" data-val="4">star</span>
+              <span class="material-symbols-outlined text-3xl star-btn" data-val="5">star</span>
+            </div>
+            <p id="star-label" class="text-xs text-on-surface-variant mt-2 font-label">Select a rating</p>
+          </div>
+
+          <textarea id="review-text"
+                    class="w-full bg-surface-container-low border-none ring-1 ring-outline-variant/30 focus:ring-secondary/50 p-4 font-serif text-lg resize-none outline-none rounded-sm mb-6"
+                    placeholder="What will you remember most about this book?"
+                    rows="4"></textarea>
+
+          <div class="flex justify-center">
+            <button id="submit-review-btn"
+                    class="bg-primary text-on-primary px-12 py-3 font-bold text-sm tracking-widest uppercase hover:bg-primary-container transition-colors rounded-sm">
+              Post Review
+            </button>
+          </div>
+          <p id="review-feedback" class="hidden text-center mt-4 text-sm font-label font-bold"></p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+</main>
+
+<!-- ═══════════════════════════════════════════════
+     FOOTER
+════════════════════════════════════════════════ -->
+<footer class="w-full mt-20 bg-[#f2ede5] border-t border-[#041534]/5">
+  <div class="flex flex-col md:flex-row justify-between items-center px-12 py-16 w-full max-w-screen-2xl mx-auto">
+    <div class="mb-8 md:mb-0">
+      <div class="text-lg font-serif italic text-[#041534] mb-2">Shelf Digital Sanctuary</div>
+      <p class="font-sans text-sm text-[#1d1c17]/60">© 2025 Shelf Digital Sanctuary. Crafted for the modern bibliophile.</p>
+    </div>
+    <div class="flex flex-wrap justify-center gap-8">
+      <a class="font-sans text-sm text-[#1d1c17]/60 hover:underline underline-offset-4" href="#">Privacy</a>
+      <a class="font-sans text-sm text-[#1d1c17]/60 hover:underline underline-offset-4" href="#">Terms</a>
+      <a class="font-sans text-sm text-[#1d1c17]/60 hover:underline underline-offset-4" href="#">Shipping</a>
+      <a class="font-sans text-sm text-[#1d1c17]/60 hover:underline underline-offset-4" href="#">AI Ethics</a>
+    </div>
+    <div class="mt-8 md:mt-0 flex gap-4">
+      <span class="material-symbols-outlined text-primary/60 cursor-pointer hover:text-primary transition-colors">language</span>
+      <span class="material-symbols-outlined text-primary/60 cursor-pointer hover:text-primary transition-colors">shield</span>
+    </div>
+  </div>
+</footer>
+
+<!-- Toast -->
+<div id="toast"
+     class="fixed bottom-6 right-6 z-50 bg-primary text-on-primary px-6 py-4 rounded-xl shadow-2xl font-label font-bold text-sm flex items-center gap-3 opacity-0"
+     style="transform: translateY(2rem);">
+  <span id="toast-icon" class="material-symbols-outlined text-base"></span>
+  <span id="toast-msg"></span>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     JAVASCRIPT
+════════════════════════════════════════════════ -->
+<script>
+// ──────────────────────────────────────────────
+//  Globals
+// ──────────────────────────────────────────────
+const TOKEN   = () => localStorage.getItem('shelf_token');
+const BOOK_ID = parseInt(window.location.pathname.split('/').pop());
+
+const FALLBACK_COVERS = [
+  'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400&q=80',
+  'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400&q=80',
+  'https://images.unsplash.com/photo-1495640388908-05fa85288e61?w=400&q=80',
+  'https://images.unsplash.com/photo-1516979187457-637abb4f9353?w=400&q=80',
+  'https://images.unsplash.com/photo-1519682337058-a94d519337bc?w=400&q=80',
+];
+
+const STAR_LABELS = ['', 'Terrible', 'Fair', 'Good', 'Great', 'Excellent'];
+
+let selectedRating = 0;
+let wishlistActive = false;
+let cartCount = 0;
+let currentBook = null;
+
+// ──────────────────────────────────────────────
+//  Utilities
+// ──────────────────────────────────────────────
+function formatINR(price) {
+  return '₹' + parseFloat(price).toLocaleString('en-IN', {
+    minimumFractionDigits: 0, maximumFractionDigits: 2
+  });
+}
+
+function escHtml(str) {
+  return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+async function apiFetch(path, opts = {}) {
+  const headers = { 'Content-Type': 'application/json', ...(opts.headers || {}) };
+  if (TOKEN()) headers['Authorization'] = `Bearer ${TOKEN()}`;
+  const res = await fetch(path, { ...opts, headers });
+  return res.json();
+}
+
+function showToast(msg, type = 'success') {
+  const toast = document.getElementById('toast');
+  document.getElementById('toast-icon').textContent = type === 'success' ? 'check_circle' : 'error';
+  document.getElementById('toast-msg').textContent  = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+function starsHtml(rating, size = 'text-sm') {
+  const r = parseFloat(rating) || 0;
+  let html = '';
+  for (let i = 1; i <= 5; i++) {
+    if (r >= i)
+      html += `<span class="material-symbols-outlined ${size}" style="font-variation-settings:'FILL' 1">star</span>`;
+    else if (r >= i - 0.5)
+      html += `<span class="material-symbols-outlined ${size}" style="font-variation-settings:'FILL' 1">star_half</span>`;
+    else
+      html += `<span class="material-symbols-outlined ${size} text-outline/30">star</span>`;
+  }
+  return html;
+}
+
+function avatarInitials(name) {
+  return (name || 'U').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+}
+
+function coverSrc(url, idx = 0) {
+  if (url && url.startsWith('http')) return url;
+  return FALLBACK_COVERS[idx % FALLBACK_COVERS.length];
+}
+
+// ──────────────────────────────────────────────
+//  Auth
+// ──────────────────────────────────────────────
+async function loadUser() {
+  if (!TOKEN()) {
+    document.getElementById('review-login-msg').classList.remove('hidden');
+    document.getElementById('review-form-wrap').classList.add('hidden');
+    return null;
+  }
+  const data = await apiFetch('/api/auth/me');
+  if (data.status !== 'ok') return null;
+
+  const user = data.data;
+  const area = document.getElementById('auth-area');
+  area.innerHTML = `
+    <div class="flex items-center gap-3">
+      <span class="text-sm font-label font-bold text-primary hidden md:block">
+        Hi, ${escHtml(user.name.split(' ')[0])}
+      </span>
+      ${user.is_admin
+        ? `<a href="/admin" class="text-xs font-label font-bold text-secondary hover:underline">Admin</a>`
+        : ''}
+      <button onclick="logout()"
+        class="border border-primary/20 text-primary px-4 py-2 rounded-sm font-label text-xs font-bold hover:bg-primary hover:text-on-primary transition-colors">
+        Logout
+      </button>
+    </div>`;
+  return user;
+}
+
+function logout() {
+  localStorage.removeItem('shelf_token');
+  location.reload();
+}
+
+// ──────────────────────────────────────────────
+//  Cart Badge
+// ──────────────────────────────────────────────
+async function loadCartCount() {
+  if (!TOKEN()) return;
+  const data = await apiFetch('/api/cart');
+  if (data.status === 'ok') {
+    updateCartBadge((data.data.items || []).length);
+  }
+}
+
+function updateCartBadge(n) {
+  cartCount = n;
+  const badge = document.getElementById('cart-badge');
+  if (n > 0) {
+    badge.textContent = n > 9 ? '9+' : n;
+    badge.classList.remove('hidden');
+    badge.classList.add('badge-pop');
+    setTimeout(() => badge.classList.remove('badge-pop'), 300);
+  } else {
+    badge.classList.add('hidden');
+  }
+}
+
+// ──────────────────────────────────────────────
+//  Fetch & Render Book
+// ──────────────────────────────────────────────
+async function loadBook() {
+  const data = await apiFetch(`/api/books/${BOOK_ID}`);
+  if (data.status !== 'ok') {
+    document.getElementById('hero-skeleton').innerHTML =
+      `<div class="py-32 text-center col-span-12">
+        <span class="material-symbols-outlined text-6xl text-outline/30 block mb-4">menu_book</span>
+        <h2 class="text-2xl font-headline text-primary">Book not found</h2>
+        <a href="/" class="mt-4 inline-block text-primary font-bold underline underline-offset-2">← Back to Home</a>
+       </div>`;
+    return;
+  }
+
+  const book = data.data;
+  currentBook = book;
+  document.title = `${book.title} | Shelf Digital Sanctuary`;
+
+  // Cover
+  const coverEl = document.getElementById('book-cover');
+  coverEl.src = coverSrc(book.cover_url);
+  coverEl.alt = book.title;
+
+  // Stock badge
+  const badge = document.getElementById('stock-badge');
+  if (book.stock === 0) {
+    badge.textContent = 'Out of Stock';
+    badge.className = 'px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest bg-error-container text-on-error-container';
+  } else if (book.stock <= 10) {
+    badge.textContent = `Only ${book.stock} left`;
+    badge.className = 'px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest bg-secondary-container text-on-secondary-container';
+  } else {
+    badge.textContent = 'In Stock';
+    badge.className = 'px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest bg-tertiary-fixed text-on-tertiary-fixed';
+  }
+
+  // Stars
+  document.getElementById('star-display').innerHTML = starsHtml(book.avg_rating);
+  document.getElementById('rating-count').textContent =
+    `${parseFloat(book.avg_rating || 0).toFixed(1)} (${book.rating_count || 0} review${book.rating_count !== 1 ? 's' : ''})`;
+
+  // Text
+  document.getElementById('book-title').textContent       = book.title;
+  document.getElementById('book-author-line').textContent  = `by ${book.author_name || book.author}`;
+  document.getElementById('book-price').textContent        = formatINR(book.price);
+  document.getElementById('book-language').textContent     = book.language || '—';
+  document.getElementById('book-isbn').textContent         = book.isbn || '—';
+  document.getElementById('book-year').textContent         = book.published_year || '—';
+  document.getElementById('book-pages').textContent        = book.pages ? `${book.pages} pages` : '—';
+  document.getElementById('book-stock-count').textContent  = book.stock > 0 ? `${book.stock} copies` : 'Unavailable';
+
+  // Synopsis — split into paragraphs
+  const synopsisEl = document.getElementById('synopsis-text');
+  const paras = (book.synopsis || '').split(/\n+/).filter(Boolean);
+  synopsisEl.innerHTML = paras.map(p => `<p>${escHtml(p)}</p>`).join('');
+
+  // Tags
+  const tagsRow = document.getElementById('tags-row');
+  const tags = [
+    ...(book.categories || []),
+    ...(book.mood_tags || '').split(',').map(t => t.trim()).filter(Boolean)
+  ];
+  const uniqueTags = [...new Set(tags)];
+  tagsRow.innerHTML = uniqueTags.map(t =>
+    `<span class="bg-surface-container-high px-4 py-2 rounded-full text-xs font-bold text-on-surface-variant">${escHtml(t)}</span>`
+  ).join('');
+
+  // Disable cart btn if out of stock
+  if (book.stock === 0) {
+    const btn = document.getElementById('add-cart-btn');
+    btn.disabled = true;
+    btn.classList.add('opacity-50', 'cursor-not-allowed');
+    btn.querySelector('span').textContent = 'shopping_cart_off';
+    btn.childNodes[btn.childNodes.length - 1].textContent = ' Out of Stock';
+  }
+
+  // Show sections
+  document.getElementById('hero-skeleton').classList.add('hidden');
+  document.getElementById('hero-section').classList.remove('hidden');
+  document.getElementById('hero-section').classList.add('grid');
+  document.getElementById('synopsis-section').classList.remove('hidden');
+}
+
+// ──────────────────────────────────────────────
+//  Similar Books
+// ──────────────────────────────────────────────
+async function loadSimilar() {
+  const data = await apiFetch(`/api/search/similar/${BOOK_ID}?limit=8`);
+  if (data.status !== 'ok') return;
+
+  const books = data.data.books || [];
+  if (!books.length) return;
+
+  const scroll = document.getElementById('similar-scroll');
+  scroll.innerHTML = '';
+
+  books.forEach((book, i) => {
+    const card = document.createElement('div');
+    card.className = 'flex-none w-64 group cursor-pointer';
+    card.innerHTML = `
+      <div class="relative mb-4 bg-surface-container p-4 pb-0 overflow-hidden">
+        <a href="/book/${book.book_id}">
+          <img src="${coverSrc(book.cover_url, i)}"
+               alt="${escHtml(book.title)}"
+               class="w-full h-80 object-cover shadow-md group-hover:scale-105 transition-transform duration-500"
+               onerror="this.style.display='none'"/>
+        </a>
+        <button
+          data-id="${book.book_id}"
+          data-title="${escHtml(book.title)}"
+          data-stock="${book.stock}"
+          class="sim-cart-btn absolute bottom-4 right-4 bg-primary text-on-primary p-3 shadow-xl transition-transform duration-300 add-sim-cart">
+          <span class="material-symbols-outlined">add_shopping_cart</span>
+        </button>
+      </div>
+      <a href="/book/${book.book_id}">
+        <h3 class="font-serif font-bold text-lg text-primary hover:text-secondary transition-colors leading-snug">
+          ${escHtml(book.title)}
+        </h3>
+      </a>
+      <p class="text-xs text-on-surface-variant font-medium mb-2">${escHtml(book.author || '')}</p>
+      <div class="flex justify-between items-center">
+        <span class="font-bold text-primary">${formatINR(book.price)}</span>
+        <div class="flex items-center text-secondary scale-75 origin-right">
+          <span class="material-symbols-outlined text-sm" style="font-variation-settings:'FILL' 1">star</span>
+          <span class="text-on-surface font-bold ml-1">${parseFloat(book.avg_rating || 0).toFixed(1)}</span>
+        </div>
+      </div>
+      ${book.similarity_score
+        ? `<p class="text-[10px] text-on-surface/40 font-label mt-1">${Math.round(book.similarity_score * 100)}% match</p>`
+        : ''}
+    `;
+
+    const cartBtn = card.querySelector('.add-sim-cart');
+    cartBtn.addEventListener('click', () => {
+      if (parseInt(cartBtn.dataset.stock) === 0) {
+        showToast('This book is out of stock.', 'error');
+        return;
+      }
+      addToCart(parseInt(cartBtn.dataset.id), cartBtn.dataset.title);
+    });
+
+    scroll.appendChild(card);
+  });
+
+  document.getElementById('similar-section').classList.remove('hidden');
+
+  // Scroll buttons
+  document.getElementById('sim-next').addEventListener('click', () => {
+    scroll.scrollBy({ left: 560, behavior: 'smooth' });
+  });
+  document.getElementById('sim-prev').addEventListener('click', () => {
+    scroll.scrollBy({ left: -560, behavior: 'smooth' });
+  });
+}
+
+// ──────────────────────────────────────────────
+//  Reviews
+// ──────────────────────────────────────────────
+async function loadReviews() {
+  const data = await apiFetch(`/api/reviews/${BOOK_ID}`);
+  if (data.status !== 'ok') return;
+
+  const reviews = data.data || [];
+  const grid    = document.getElementById('reviews-grid');
+  const empty   = document.getElementById('reviews-empty');
+
+  document.getElementById('review-summary').textContent =
+    reviews.length ? `${reviews.length} review${reviews.length !== 1 ? 's' : ''}` : '';
+
+  if (!reviews.length) {
+    empty.classList.remove('hidden');
+    return;
+  }
+  empty.classList.add('hidden');
+  grid.innerHTML = '';
+
+  reviews.forEach((r, i) => {
+    const initials = avatarInitials(r.user_name);
+    const bgColors = ['bg-primary-container', 'bg-secondary-container', 'bg-tertiary-fixed', 'bg-surface-container-high'];
+    const fgColors = ['text-on-primary', 'text-on-secondary-container', 'text-on-tertiary-fixed', 'text-on-surface'];
+    const bg = bgColors[i % bgColors.length];
+    const fg = fgColors[i % fgColors.length];
+    const borderColors = ['border-secondary/30', 'border-primary/10', 'border-tertiary-fixed/50', 'border-outline-variant/20'];
+    const border = borderColors[i % borderColors.length];
+
+    const date = r.created_at
+      ? new Date(r.created_at).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' })
+      : '';
+
+    const div = document.createElement('div');
+    div.className = `bg-surface-container-lowest p-8 border-l-2 ${border}`;
+    div.innerHTML = `
+      <div class="flex justify-between items-start mb-6">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 ${bg} ${fg} flex items-center justify-center rounded-full font-serif font-bold text-sm">
+            ${initials}
+          </div>
+          <div>
+            <p class="font-bold text-sm">${escHtml(r.user_name || 'Anonymous')}</p>
+            <p class="text-[10px] text-on-surface-variant uppercase tracking-widest">${date}</p>
+          </div>
+        </div>
+        <div class="flex text-secondary scale-90">
+          ${starsHtml(r.rating)}
+        </div>
+      </div>
+      <p class="font-serif italic text-lg leading-relaxed text-on-surface">
+        "${escHtml(r.review_text || '')}"
+      </p>
+    `;
+    grid.appendChild(div);
+  });
+}
+
+// ──────────────────────────────────────────────
+//  Star Selector (Review Form)
+// ──────────────────────────────────────────────
+function initStarSelector() {
+  const stars = document.querySelectorAll('.star-btn');
+  const label = document.getElementById('star-label');
+
+  stars.forEach(btn => {
+    btn.addEventListener('mouseover', () => {
+      const val = parseInt(btn.dataset.val);
+      stars.forEach(s => {
+        const sv = parseInt(s.dataset.val);
+        s.style.fontVariationSettings = sv <= val ? "'FILL' 1" : "'FILL' 0";
+      });
+      label.textContent = STAR_LABELS[val] || '';
+    });
+
+    btn.addEventListener('mouseleave', () => {
+      stars.forEach(s => {
+        const sv = parseInt(s.dataset.val);
+        s.style.fontVariationSettings = sv <= selectedRating ? "'FILL' 1" : "'FILL' 0";
+      });
+      label.textContent = STAR_LABELS[selectedRating] || 'Select a rating';
+    });
+
+    btn.addEventListener('click', () => {
+      selectedRating = parseInt(btn.dataset.val);
+      label.textContent = STAR_LABELS[selectedRating];
+      stars.forEach(s => {
+        s.style.fontVariationSettings = parseInt(s.dataset.val) <= selectedRating ? "'FILL' 1" : "'FILL' 0";
+      });
+    });
+  });
+}
+
+// ──────────────────────────────────────────────
+//  Submit Review
+// ──────────────────────────────────────────────
+async function submitReview() {
+  const text     = document.getElementById('review-text').value.trim();
+  const feedback = document.getElementById('review-feedback');
+
+  if (!TOKEN()) {
+    showToast('Please login to post a review.', 'error');
+    return;
+  }
+  if (selectedRating === 0) {
+    feedback.textContent = 'Please select a star rating.';
+    feedback.className = 'text-center mt-4 text-sm font-label font-bold text-error';
+    feedback.classList.remove('hidden');
+    return;
+  }
+
+  const data = await apiFetch('/api/reviews/add', {
+    method: 'POST',
+    body: JSON.stringify({ book_id: BOOK_ID, rating: selectedRating, review_text: text })
+  });
+
+  if (data.status === 'ok') {
+    feedback.textContent = '✓ Review posted! Thank you.';
+    feedback.className = 'text-center mt-4 text-sm font-label font-bold text-secondary';
+    feedback.classList.remove('hidden');
+    document.getElementById('review-text').value = '';
+    selectedRating = 0;
+    document.querySelectorAll('.star-btn').forEach(s => {
+      s.style.fontVariationSettings = "'FILL' 0";
+    });
+    document.getElementById('star-label').textContent = 'Select a rating';
+    setTimeout(() => { loadReviews(); }, 800);
+  } else {
+    feedback.textContent = data.message || 'Could not post review.';
+    feedback.className = 'text-center mt-4 text-sm font-label font-bold text-error';
+    feedback.classList.remove('hidden');
+  }
+}
+
+// ──────────────────────────────────────────────
+//  Add to Cart
+// ──────────────────────────────────────────────
+async function addToCart(bookId, title) {
+  if (!TOKEN()) {
+    showToast('Please login to add books to cart.', 'error');
+    setTimeout(() => window.location.href = '/auth', 1200);
+    return;
+  }
+
+  const btn = document.getElementById('add-cart-btn');
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<span class="material-symbols-outlined text-sm animate-spin">progress_activity</span> Adding...`;
+  }
+
+  const data = await apiFetch('/api/cart/add', {
+    method: 'POST',
+    body: JSON.stringify({ book_id: bookId, quantity: 1 })
+  });
+
+  if (data.status === 'ok') {
+    showToast(`"${title}" added to cart!`);
+    updateCartBadge(cartCount + 1);
+    if (btn) {
+      btn.innerHTML = `<span class="material-symbols-outlined text-sm">check</span> Added!`;
+      setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = `<span class="material-symbols-outlined text-sm">shopping_bag</span> Add to Cart`;
+      }, 2000);
+    }
+  } else {
+    showToast(data.message || 'Could not add to cart.', 'error');
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = `<span class="material-symbols-outlined text-sm">shopping_bag</span> Add to Cart`;
+    }
+  }
+}
+
+// ──────────────────────────────────────────────
+//  Wishlist
+// ──────────────────────────────────────────────
+async function toggleWishlist() {
+  if (!TOKEN()) {
+    showToast('Please login to use your wishlist.', 'error');
+    return;
+  }
+
+  const wishBtn = document.getElementById('add-wish-btn');
+
+  if (!wishlistActive) {
+    const data = await apiFetch('/api/wishlist/add', {
+      method: 'POST',
+      body: JSON.stringify({ book_id: BOOK_ID })
+    });
+    if (data.status === 'ok') {
+      wishlistActive = true;
+      wishBtn.classList.add('wish-active');
+      const icon = wishBtn.querySelector('.wish-icon');
+      icon.style.fontVariationSettings = "'FILL' 1";
+      icon.style.color = '#ba1a1a';
+      showToast('Added to wishlist!');
+    }
+  } else {
+    const data = await apiFetch(`/api/wishlist/remove/${BOOK_ID}`, { method: 'DELETE' });
+    if (data.status === 'ok') {
+      wishlistActive = false;
+      wishBtn.classList.remove('wish-active');
+      const icon = wishBtn.querySelector('.wish-icon');
+      icon.style.fontVariationSettings = "'FILL' 0";
+      icon.style.color = '';
+      showToast('Removed from wishlist.');
+    }
+  }
+}
+
+// ──────────────────────────────────────────────
+//  Nav Search
+// ──────────────────────────────────────────────
+function initNavSearch() {
+  document.getElementById('nav-search').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      const q = e.target.value.trim();
+      if (q) window.location.href = `/?q=${encodeURIComponent(q)}`;
+    }
+  });
+}
+
+// ──────────────────────────────────────────────
+//  INIT
+// ──────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+  if (isNaN(BOOK_ID)) {
+    window.location.href = '/';
+    return;
+  }
+
+  initNavSearch();
+  initStarSelector();
+
+  await loadUser();
+  await loadCartCount();
+  await loadBook();
+  await loadSimilar();
+  await loadReviews();
+
+  // Wire buttons
+  document.getElementById('add-cart-btn').addEventListener('click', () => {
+    if (currentBook) addToCart(currentBook.book_id, currentBook.title);
+  });
+
+  document.getElementById('add-wish-btn').addEventListener('click', toggleWishlist);
+  document.getElementById('submit-review-btn').addEventListener('click', submitReview);
+});
+</script>
+
+</body>
+</html>
